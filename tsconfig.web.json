@@ -13,6 +13,9 @@
     "paths": {
       "@renderer/*": [
         "src/renderer/src/*"
+      ],
+      "electron-ipc-decorator/client": [
+        "node_modules/electron-ipc-decorator/dist/client.d.ts"
       ]
     }
   }

@@ -8,4 +8,4 @@ import type { IpcServices } from '../../../preload/index.d'
  */
 export const ipcServices = createIpcProxy<IpcServices>(
   window.electron.ipcRenderer as unknown as IpcRenderer
-)
+) as IpcServices | null

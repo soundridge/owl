@@ -5,12 +5,27 @@ import { ipcServices } from './lib/ipc-client'
 
 function App(): React.JSX.Element {
   const [pingResult, setPingResult] = useState<string>('')
+  const [agentResult, setAgentResult] = useState<string>('')
 
   const pingTest = async (): Promise<void> => {
     if (!ipcServices) return
     const result = await ipcServices.system.ping()
     console.log('Ping result:', result)
     setPingResult(result)
+  }
+
+  const agentTest = async (): Promise<void> => {
+    if (!ipcServices) return
+    try {
+      setAgentResult('Thinking...')
+      const a = await ipcServices.agent.chat('hi')
+      // const response = await (ipcServices.agent.chat as (message: string) => Promise<string>)('hi')
+      console.log('Agent response:', response)
+      setAgentResult(response)
+    } catch (error) {
+      console.error('Agent error:', error)
+      setAgentResult(`Error: ${error}`)
+    }
   }
 
   return (
@@ -33,6 +48,9 @@ function App(): React.JSX.Element {
         <div className="action">
           <a onClick={pingTest}>Send Ping</a>
         </div>
+        <div className="action">
+          <a onClick={agentTest}>Test Agent</a>
+        </div>
       </div>
 
       {pingResult && (
@@ -40,6 +58,14 @@ function App(): React.JSX.Element {
           style={{ marginTop: '20px', padding: '10px', background: '#333', borderRadius: '4px' }}
         >
           <strong style={{ color: '#4ade80' }}>IPC Response:</strong> {pingResult}
+        </div>
+      )}
+
+      {agentResult && (
+        <div
+          style={{ marginTop: '20px', padding: '10px', background: '#333', borderRadius: '4px' }}
+        >
+          <strong style={{ color: '#60a5fa' }}>Agent Response:</strong> {agentResult}
         </div>
       )}
 

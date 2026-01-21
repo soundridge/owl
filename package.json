@@ -21,8 +21,12 @@
     "build:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.13",
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@voltagent/core": "^0.1.86",
+    "@voltagent/vercel-ai": "^1.0.0",
+    "ai": "^6.0.43",
     "electron-ipc-decorator": "0.2.0",
     "electron-updater": "^6.3.9"
   },
