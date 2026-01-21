@@ -1,8 +1,17 @@
+import { useState } from 'react'
 import Versions from './components/Versions'
 import electronLogo from './assets/electron.svg'
+import { ipcServices } from './lib/ipc-client'
 
 function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const [pingResult, setPingResult] = useState<string>('')
+
+  const pingTest = async (): Promise<void> => {
+    if (!ipcServices) return
+    const result = await ipcServices.system.ping()
+    console.log('Ping result:', result)
+    setPingResult(result)
+  }
 
   return (
     <>
@@ -22,11 +31,18 @@ function App(): React.JSX.Element {
           </a>
         </div>
         <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
+          <a onClick={pingTest}>Send Ping</a>
         </div>
       </div>
+
+      {pingResult && (
+        <div
+          style={{ marginTop: '20px', padding: '10px', background: '#333', borderRadius: '4px' }}
+        >
+          <strong style={{ color: '#4ade80' }}>IPC Response:</strong> {pingResult}
+        </div>
+      )}
+
       <Versions></Versions>
     </>
   )
