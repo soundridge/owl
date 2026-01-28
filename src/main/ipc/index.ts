@@ -2,9 +2,8 @@ import type { ExtractServiceMethods } from 'electron-ipc-decorator'
 import { createServices } from 'electron-ipc-decorator'
 
 import { SystemService } from './services/system'
-import { AgentService } from './services/agent'
 
-const services = createServices([SystemService, AgentService])
+const services = createServices([SystemService])
 
 // ExtractServiceMethods expects a service instance, so we map over each service
 export type IpcServices = {

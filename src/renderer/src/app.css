@@ -1,0 +1,58 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  /* macOS Dark Mode Color Palette */
+  --bg: #141414;
+  --bg-secondary: #1a1a1a;
+  --panel: #1e1e1e;
+  --panel-hover: #252525;
+  --panel-2: #262626;
+  --panel-3: #2d2d2d;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  
+  /* Text colors */
+  --text: #ffffff;
+  --text-secondary: #e5e5e5;
+  --text-muted: #8e8e8e;
+  --text-dim: #6e6e6e;
+  
+  /* Accent colors - macOS style */
+  --accent-blue: #4da3ff;
+  --accent-green: #34c759;
+  --accent-red: #ff453a;
+  --accent-orange: #ff9f0a;
+  --accent-yellow: #ffd60a;
+  
+  /* Legacy mappings for compatibility */
+  --muted: var(--text-muted);
+  --dim: var(--text-dim);
+  --accent: var(--accent-blue);
+  --accent-2: var(--accent-green);
+  --warning: var(--accent-orange);
+  --danger: var(--accent-red);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text);
+  background: var(--bg);
+}
+
+#root {
+  height: 100vh;
+}
+
+code, pre {
+  font-family: "JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", monospace;
+}
