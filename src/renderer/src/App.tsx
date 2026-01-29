@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Group, Panel, Separator } from 'react-resizable-panels'
 import './app.css'
 import { ChatPanel } from './features/chat'
 import { InspectorPanel } from './features/inspector'
@@ -113,30 +114,61 @@ function App(): React.JSX.Element {
     setMessages((prev) => [...prev, newMessage])
   }
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg)] text-[var(--text)]">
-      {/* Sidebar with vibrancy effect */}
-      <Sidebar
-        projects={mockProjects}
-        activeWorkspaceId={activeWorkspaceId}
-        onWorkspaceSelect={setActiveWorkspaceId}
-      />
+      <Group orientation="horizontal" id="main-layout">
+        {/* Sidebar with vibrancy effect */}
+        {!sidebarCollapsed && (
+          <>
+            <Panel
+              id="sidebar"
+              defaultSize="15%"
+              minSize="12%"
+              maxSize="25%"
+              className="flex"
+            >
+              <Sidebar
+                projects={mockProjects}
+                activeWorkspaceId={activeWorkspaceId}
+                onWorkspaceSelect={setActiveWorkspaceId}
+                onToggleCollapse={() => setSidebarCollapsed(true)}
+              />
+            </Panel>
+            <Separator className="w-px bg-[var(--separator)] transition-colors hover:bg-[var(--border-active)]" />
+          </>
+        )}
 
-      {/* Main content area */}
-      <div className="flex flex-1 gap-px overflow-hidden">
-        <ChatPanel
-          workspace={activeWorkspace}
-          messages={messages}
-          prNumber="1432"
-          onSendMessage={handleSendMessage}
-        />
+        {/* Main content area */}
+        <Panel id="chat" minSize="30%">
+          <ChatPanel
+            workspace={activeWorkspace}
+            messages={messages}
+            prNumber="1432"
+            onSendMessage={handleSendMessage}
+            sidebarCollapsed={sidebarCollapsed}
+            onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+          />
+        </Panel>
 
-        <InspectorPanel
-          files={mockFiles}
-          terminalLines={mockTerminalLines}
-          branch="kampala-v3"
-        />
-      </div>
+        <Separator className="w-px bg-[var(--separator)] transition-colors hover:bg-[var(--border-active)]" />
+
+        {/* Inspector panel */}
+        <Panel
+          id="inspector"
+          defaultSize="22%"
+          minSize="15%"
+          maxSize="40%"
+          className="flex"
+        >
+          <InspectorPanel
+            files={mockFiles}
+            terminalLines={mockTerminalLines}
+            branch="kampala-v3"
+          />
+        </Panel>
+      </Group>
     </div>
   )
 }

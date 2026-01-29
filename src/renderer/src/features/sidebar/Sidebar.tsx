@@ -1,3 +1,4 @@
+import { PanelLeftClose } from 'lucide-react'
 import { Button, IconButton } from '../../components/ui'
 import type { Project } from '../../types'
 import { ProjectGroup } from './ProjectGroup'
@@ -7,6 +8,7 @@ interface SidebarProps {
   activeWorkspaceId?: string
   onWorkspaceSelect?: (workspaceId: string) => void
   onAddRepository?: () => void
+  onToggleCollapse?: () => void
 }
 
 export function Sidebar({
@@ -14,17 +16,21 @@ export function Sidebar({
   activeWorkspaceId,
   onWorkspaceSelect,
   onAddRepository,
+  onToggleCollapse,
 }: SidebarProps) {
   return (
-    <aside className="vibrancy flex w-[260px] flex-col overflow-hidden border-r border-[var(--border-subtle)] bg-[var(--sidebar-bg)]">
-      {/* Titlebar area with window controls */}
-      <div className="flex h-[52px] shrink-0 items-center gap-2 border-b border-[var(--separator)] px-4" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
-        <div className="flex gap-2" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
-          <span className="h-3 w-3 rounded-full bg-[#ff5f57] transition-opacity hover:opacity-80 active:bg-[#bf4942]" />
-          <span className="h-3 w-3 rounded-full bg-[#febc2e] transition-opacity hover:opacity-80 active:bg-[#bf9122]" />
-          <span className="h-3 w-3 rounded-full bg-[#28c840] transition-opacity hover:opacity-80 active:bg-[#1e9631]" />
-        </div>
-        <span className="ml-2 text-[13px] font-medium text-[var(--text-secondary)]">Home</span>
+    <aside className="vibrancy flex h-full w-full flex-col overflow-hidden border-r border-[var(--border-subtle)] bg-[var(--sidebar-bg)]">
+      {/* Titlebar area - draggable region for window, traffic lights handled by system */}
+      <div className="group flex h-[52px] shrink-0 items-center justify-between border-b border-[var(--separator)] pl-[78px] pr-2" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
+        <span className="text-[13px] font-medium text-[var(--text-secondary)]">Home</span>
+        <button
+          onClick={onToggleCollapse}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-tertiary)] opacity-0 transition-all hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-secondary)] group-hover:opacity-100"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+          title="Hide sidebar"
+        >
+          <PanelLeftClose className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Project groups - scrollable */}
