@@ -1,38 +1,66 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
 
 :root {
   color-scheme: dark;
-  /* macOS Dark Mode Color Palette */
-  --bg: #141414;
-  --bg-secondary: #1a1a1a;
-  --panel: #1e1e1e;
-  --panel-hover: #252525;
-  --panel-2: #262626;
-  --panel-3: #2d2d2d;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  
-  /* Text colors */
-  --text: #ffffff;
-  --text-secondary: #e5e5e5;
-  --text-muted: #8e8e8e;
-  --text-dim: #6e6e6e;
-  
-  /* Accent colors - macOS style */
-  --accent-blue: #4da3ff;
-  --accent-green: #34c759;
+
+  /* ============================================
+     macOS Human Interface Guidelines Colors
+     ============================================ */
+
+  /* Window & Panel Backgrounds - softer, not pure black */
+  --bg: #1c1c1e;
+  --bg-secondary: #2c2c2e;
+  --panel: rgba(44, 44, 46, 0.8);
+  --panel-solid: #2c2c2e;
+  --panel-hover: rgba(58, 58, 60, 0.6);
+  --panel-2: #3a3a3c;
+  --panel-3: #48484a;
+
+  /* Sidebar with vibrancy effect */
+  --sidebar-bg: rgba(30, 30, 30, 0.72);
+
+  /* Borders - very subtle, macOS style */
+  --border: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --separator: rgba(255, 255, 255, 0.08);
+
+  /* Text colors - following macOS opacity guidelines */
+  --text: rgba(255, 255, 255, 0.88);
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --text-dim: rgba(255, 255, 255, 0.35);
+
+  /* macOS System Colors */
+  --accent-blue: #0a84ff;
+  --accent-green: #30d158;
   --accent-red: #ff453a;
   --accent-orange: #ff9f0a;
   --accent-yellow: #ffd60a;
-  
-  /* Legacy mappings for compatibility */
-  --muted: var(--text-muted);
-  --dim: var(--text-dim);
+  --accent-purple: #bf5af2;
+  --accent-pink: #ff375f;
+  --accent-teal: #64d2ff;
+
+  /* Semantic colors */
   --accent: var(--accent-blue);
-  --accent-2: var(--accent-green);
+  --success: var(--accent-green);
   --warning: var(--accent-orange);
   --danger: var(--accent-red);
+
+  /* Legacy mappings */
+  --muted: var(--text-muted);
+  --dim: var(--text-dim);
+  --accent-2: var(--accent-green);
+
+  /* Shadows - macOS style elevation */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  /* Border radius - macOS standard */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
 }
 
 * {
@@ -42,7 +70,10 @@
 body {
   margin: 0;
   height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  /* macOS system font stack */
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--text);
@@ -54,5 +85,46 @@ body {
 }
 
 code, pre {
-  font-family: "JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", monospace;
+  font-family: "SF Mono", Menlo, Monaco, "Courier New", monospace;
+}
+
+/* macOS-style scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Vibrancy/blur utility classes */
+.vibrancy {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.vibrancy-light {
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+}
+
+/* macOS-style focus ring */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.4);
+}
+
+/* Transition utility */
+.transition-default {
+  transition: all 0.15s ease-out;
 }

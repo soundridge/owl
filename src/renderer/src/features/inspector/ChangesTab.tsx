@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, IconButton } from '../../components/ui'
+import { IconButton } from '../../components/ui'
 import type { FileChange } from '../../types'
 import { FileChangeItem } from './FileChangeItem'
 
@@ -20,42 +20,46 @@ export function ChangesTab({ files, onFileClick }: ChangesTabProps) {
   ]
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Tab header */}
-      <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] pb-2">
-        <div className="flex gap-1.5">
+    <div className="flex flex-col">
+      {/* Tab header - macOS segmented control style */}
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex rounded-[var(--radius-md)] bg-[var(--panel-2)] p-0.5">
           {tabs.map((tab) => (
-            <Button
+            <button
               key={tab.id}
-              variant={activeTab === tab.id ? 'outline' : 'secondary'}
-              size="sm"
               onClick={() => setActiveTab(tab.id)}
-              className="border-transparent"
+              className={`rounded-[var(--radius-sm)] px-2.5 py-1 text-[12px] font-medium transition-all duration-150 ${
+                activeTab === tab.id
+                  ? 'bg-[var(--panel-3)] text-[var(--text)] shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+              }`}
             >
               {tab.label}
-              {tab.count !== undefined && ` ${tab.count}`}
-            </Button>
+              {tab.count !== undefined && (
+                <span className="ml-1 text-[var(--text-dim)]">{tab.count}</span>
+              )}
+            </button>
           ))}
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1">
           <IconButton size="sm">
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[16px] w-[16px]">
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5">
               <path
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.6"
+                strokeWidth="1.5"
                 strokeLinecap="round"
               />
             </svg>
           </IconButton>
           <IconButton size="sm">
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[16px] w-[16px]">
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5">
               <path
                 d="M3 4h18M3 8h18M3 12h18M3 16h12M3 20h12"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.6"
+                strokeWidth="1.5"
                 strokeLinecap="round"
               />
             </svg>
@@ -64,7 +68,7 @@ export function ChangesTab({ files, onFileClick }: ChangesTabProps) {
       </div>
 
       {/* File list */}
-      <div className="flex flex-col gap-1 overflow-y-auto">
+      <div className="flex flex-col gap-0.5 overflow-y-auto">
         {files.map((file) => (
           <FileChangeItem key={file.path} file={file} onClick={() => onFileClick?.(file.path)} />
         ))}

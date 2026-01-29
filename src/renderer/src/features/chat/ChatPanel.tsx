@@ -19,14 +19,21 @@ export function ChatPanel({
   onMerge,
 }: ChatPanelProps) {
   return (
-    <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--panel)] p-3">
-      <ChatHeader workspace={workspace} prNumber={prNumber} onMerge={onMerge} />
+    <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--bg-secondary)]">
+      {/* Header with subtle bottom border */}
+      <div className="shrink-0 border-b border-[var(--separator)]">
+        <ChatHeader workspace={workspace} prNumber={prNumber} onMerge={onMerge} />
+      </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+      {/* Messages area */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <MessageList messages={messages} />
       </div>
 
-      <ChatInput onSend={onSendMessage} />
+      {/* Input area with subtle top border */}
+      <div className="shrink-0 border-t border-[var(--separator)] bg-[var(--panel-solid)] p-3">
+        <ChatInput onSend={onSendMessage} />
+      </div>
     </main>
   )
 }

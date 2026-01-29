@@ -14,25 +14,25 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    'inline-flex items-center justify-center font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-blue)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg)] disabled:opacity-50 disabled:cursor-not-allowed'
+    'inline-flex items-center justify-center font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-blue)]/40 focus-visible:ring-offset-0 disabled:opacity-40 disabled:cursor-not-allowed'
 
   const variants = {
     primary:
-      'rounded-md bg-[var(--accent-blue)] text-white hover:bg-[#5eb0ff] active:bg-[#3d95ff]',
+      'rounded-[var(--radius-md)] bg-[var(--accent-blue)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] hover:bg-[#1a91ff] active:bg-[#0077e6]',
     secondary:
-      'rounded-md border border-[var(--border)] bg-transparent text-[var(--text-muted)] hover:bg-[var(--panel-hover)] hover:text-[var(--text-secondary)]',
+      'rounded-[var(--radius-md)] bg-[var(--panel-2)] text-[var(--text-secondary)] hover:bg-[var(--panel-3)] active:bg-[var(--panel-hover)]',
     ghost:
-      'rounded-md border border-dashed border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border)] hover:bg-[var(--panel-hover)] hover:text-[var(--text-secondary)]',
+      'rounded-[var(--radius-md)] bg-transparent text-[var(--text-muted)] hover:bg-[var(--panel-hover)] hover:text-[var(--text-secondary)]',
     success:
-      'rounded-md bg-[var(--accent-green)] text-white hover:bg-[#40d165] active:bg-[#2eb84d]',
+      'rounded-[var(--radius-md)] bg-[var(--accent-green)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] hover:bg-[#3de066] active:bg-[#28b94c]',
     outline:
-      'rounded-md border border-[var(--accent-blue)] bg-[rgba(77,163,255,0.1)] text-[var(--text)] hover:bg-[rgba(77,163,255,0.15)]',
+      'rounded-[var(--radius-md)] border border-[var(--border)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--panel-hover)]',
   }
 
   const sizes = {
-    sm: 'px-2.5 py-1.5 text-[12px]',
-    md: 'px-3 py-1.5 text-[13px]',
-    lg: 'px-3.5 py-2 text-[13px]',
+    sm: 'h-[26px] px-2.5 text-[12px]',
+    md: 'h-[28px] px-3 text-[13px]',
+    lg: 'h-[32px] px-4 text-[13px]',
   }
 
   return (

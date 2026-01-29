@@ -16,19 +16,19 @@ export function Sidebar({
   onAddRepository,
 }: SidebarProps) {
   return (
-    <aside className="flex w-[260px] flex-col gap-4 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--panel)] p-3">
-      {/* Window controls + Home */}
-      <div className="flex items-center gap-3 px-1 text-[13px] text-[var(--text-muted)]">
-        <div className="flex gap-2">
-          <span className="h-3 w-3 rounded-full bg-[#ff5f57] transition-opacity hover:opacity-80" />
-          <span className="h-3 w-3 rounded-full bg-[#febc2e] transition-opacity hover:opacity-80" />
-          <span className="h-3 w-3 rounded-full bg-[#28c840] transition-opacity hover:opacity-80" />
+    <aside className="vibrancy flex w-[260px] flex-col overflow-hidden border-r border-[var(--border-subtle)] bg-[var(--sidebar-bg)]">
+      {/* Titlebar area with window controls */}
+      <div className="flex h-[52px] shrink-0 items-center gap-2 border-b border-[var(--separator)] px-4" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
+        <div className="flex gap-2" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+          <span className="h-3 w-3 rounded-full bg-[#ff5f57] transition-opacity hover:opacity-80 active:bg-[#bf4942]" />
+          <span className="h-3 w-3 rounded-full bg-[#febc2e] transition-opacity hover:opacity-80 active:bg-[#bf9122]" />
+          <span className="h-3 w-3 rounded-full bg-[#28c840] transition-opacity hover:opacity-80 active:bg-[#1e9631]" />
         </div>
-        <div className="font-medium tracking-tight">Home</div>
+        <span className="ml-2 text-[13px] font-medium text-[var(--text-secondary)]">Home</span>
       </div>
 
       {/* Project groups - scrollable */}
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2 py-3">
         {projects.map((project) => (
           <ProjectGroup
             key={project.id}
@@ -40,17 +40,17 @@ export function Sidebar({
       </div>
 
       {/* Bottom actions */}
-      <div className="mt-auto flex items-center gap-2 border-t border-[var(--border)] pt-3">
-        <Button variant="primary" size="lg" className="flex-1" onClick={onAddRepository}>
+      <div className="flex shrink-0 items-center gap-2 border-t border-[var(--separator)] p-3">
+        <Button variant="primary" size="md" className="flex-1" onClick={onAddRepository}>
           Add repository
         </Button>
         <IconButton>
-          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px]">
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
             <path
               d="M12 6v6m0 0v6m0-6h6m-6 0H6"
               fill="none"
               stroke="currentColor"
-              strokeWidth="1.6"
+              strokeWidth="1.5"
               strokeLinecap="round"
             />
           </svg>

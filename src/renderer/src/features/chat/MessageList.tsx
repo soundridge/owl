@@ -18,7 +18,7 @@ export function MessageList({ messages }: MessageListProps) {
   return (
     <div
       ref={containerRef}
-      className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto pr-1"
+      className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4"
     >
       {messages.map((message) => (
         <MessageItem key={message.id} message={message} />

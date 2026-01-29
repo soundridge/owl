@@ -114,25 +114,29 @@ function App(): React.JSX.Element {
   }
 
   return (
-    <div className="flex h-screen w-screen gap-3 overflow-hidden bg-[var(--bg)] p-3 text-[var(--text)]">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg)] text-[var(--text)]">
+      {/* Sidebar with vibrancy effect */}
       <Sidebar
         projects={mockProjects}
         activeWorkspaceId={activeWorkspaceId}
         onWorkspaceSelect={setActiveWorkspaceId}
       />
 
-      <ChatPanel
-        workspace={activeWorkspace}
-        messages={messages}
-        prNumber="1432"
-        onSendMessage={handleSendMessage}
-      />
+      {/* Main content area */}
+      <div className="flex flex-1 gap-px overflow-hidden">
+        <ChatPanel
+          workspace={activeWorkspace}
+          messages={messages}
+          prNumber="1432"
+          onSendMessage={handleSendMessage}
+        />
 
-      <InspectorPanel
-        files={mockFiles}
-        terminalLines={mockTerminalLines}
-        branch="kampala-v3"
-      />
+        <InspectorPanel
+          files={mockFiles}
+          terminalLines={mockTerminalLines}
+          branch="kampala-v3"
+        />
+      </div>
     </div>
   )
 }

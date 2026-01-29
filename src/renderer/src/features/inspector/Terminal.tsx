@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Button } from '../../components/ui'
 import type { TerminalLine } from '../../types'
 
 interface TerminalProps {
@@ -18,36 +17,38 @@ export function Terminal({ lines, branch }: TerminalProps) {
   ]
 
   return (
-    <div className="mt-auto overflow-hidden rounded-lg border border-[var(--border)] bg-[#0a0a0a]">
+    <div className="flex flex-col overflow-hidden bg-[#1a1a1c]">
       {/* Tab header */}
-      <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-2.5 py-2">
-        <div className="flex gap-1.5">
+      <div className="flex h-[36px] shrink-0 items-center justify-between gap-2 border-b border-[var(--separator)] px-2">
+        <div className="flex items-center gap-1">
           {tabs.map((tab) => (
-            <Button
+            <button
               key={tab.id}
-              variant={activeTab === tab.id ? 'outline' : 'secondary'}
-              size="sm"
               onClick={() => setActiveTab(tab.id)}
-              className="border-transparent"
+              className={`rounded-[var(--radius-sm)] px-2 py-1 text-[12px] font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-[var(--panel-2)] text-[var(--text)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+              }`}
             >
               {tab.label}
-            </Button>
+            </button>
           ))}
-          <button className="rounded-md px-1.5 py-1 text-[12px] text-[var(--text-muted)] transition-colors hover:text-[var(--text)]">
+          <button className="ml-0.5 rounded-[var(--radius-sm)] px-1.5 py-1 text-[13px] text-[var(--text-dim)] transition-colors hover:bg-[var(--panel-hover)] hover:text-[var(--text-muted)]">
             +
           </button>
         </div>
-        <div className="flex items-center gap-2 text-[12px]">
-          <span className="text-[var(--text-muted)]">Run</span>
-          <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-[var(--text-dim)]">⌘R</kbd>
+        <div className="flex items-center gap-1.5 text-[11px]">
+          <span className="text-[var(--text-dim)]">Run</span>
+          <kbd className="rounded-[var(--radius-sm)] bg-[var(--panel-2)] px-1.5 py-0.5 text-[10px] text-[var(--text-dim)]">⌘R</kbd>
         </div>
       </div>
 
       {/* Terminal content */}
-      <div className="flex h-[180px] flex-col gap-1 overflow-y-auto px-3 py-2.5 font-mono text-[12px] text-[var(--text-secondary)]">
+      <div className="flex h-[160px] flex-col gap-0.5 overflow-y-auto bg-[#161618] px-3 py-2 font-mono text-[12px] leading-relaxed text-[var(--text-secondary)]">
         {branch && (
           <div className="flex items-center gap-1">
-            <span className="font-semibold text-[var(--accent-green)]">{branch}</span>
+            <span className="font-medium text-[var(--accent-green)]">{branch}</span>
             <span className="text-[var(--text-dim)]">git:(main)</span>
             <span className="animate-pulse text-[var(--text-muted)]">▋</span>
           </div>
@@ -56,11 +57,11 @@ export function Terminal({ lines, branch }: TerminalProps) {
           <div key={line.id} className={line.type === 'output' ? 'text-[var(--text-dim)]' : ''}>
             {line.type === 'prompt' && (
               <>
-                <span className="font-semibold text-[var(--accent-green)]">{line.branch || 'main'}</span>
+                <span className="font-medium text-[var(--accent-green)]">{line.branch || 'main'}</span>
                 <span className="text-[var(--text-dim)]"> git:(main)</span>
               </>
             )}
-            {line.type === 'command' && <span>$ {line.content}</span>}
+            {line.type === 'command' && <span className="text-[var(--text-secondary)]">$ {line.content}</span>}
             {line.type === 'output' && <span>{line.content}</span>}
           </div>
         ))}

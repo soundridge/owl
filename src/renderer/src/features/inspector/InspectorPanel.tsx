@@ -16,9 +16,13 @@ export function InspectorPanel({
   onFileClick,
 }: InspectorPanelProps) {
   return (
-    <aside className="flex w-[360px] flex-col gap-3 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--panel)] p-3">
-      <ChangesTab files={files} onFileClick={onFileClick} />
-      <Terminal lines={terminalLines} branch={branch} />
+    <aside className="flex w-[340px] shrink-0 flex-col overflow-hidden border-l border-[var(--separator)] bg-[var(--bg-secondary)]">
+      <div className="flex-1 overflow-y-auto p-3">
+        <ChangesTab files={files} onFileClick={onFileClick} />
+      </div>
+      <div className="shrink-0 border-t border-[var(--separator)]">
+        <Terminal lines={terminalLines} branch={branch} />
+      </div>
     </aside>
   )
 }
