@@ -1,24 +1,72 @@
-import { useState, useCallback, useMemo } from 'react'
+import { create } from 'zustand'
 import type {
   Workspace,
+  Session,
   FileChange,
   BranchInfo,
-  AppState,
-  LoadingState,
-  AsyncState,
   TerminalState,
+  AsyncState,
 } from '../types'
 import { mockWorkspaces, mockFileChanges, mockBranchInfo } from './mock-data'
 
 // ============================================
-// Initial State
+// Store State Interface
 // ============================================
 
-const initialTerminalState: TerminalState = {
-  sessionId: null,
-  isConnected: false,
-  status: 'idle',
+interface AppState {
+  // Data
+  workspaces: AsyncState<Workspace[]>
+  changes: AsyncState<FileChange[]>
+  branchInfo: AsyncState<BranchInfo>
+  terminal: TerminalState
+
+  // UI State
+  activeWorkspaceId: string | null
+  activeSessionId: string | null
+  sidebarCollapsed: boolean
+
+  // Computed (accessed via getters)
+  getActiveWorkspace: () => Workspace | null
+  getActiveSession: () => Session | null
+
+  // Actions - Workspace
+  setWorkspaces: (workspaces: Workspace[]) => void
+  selectWorkspace: (workspaceId: string) => void
+  addWorkspace: (workspace: Workspace) => void
+  removeWorkspace: (workspaceId: string) => void
+
+  // Actions - Session
+  selectSession: (sessionId: string) => void
+  addSession: (workspaceId: string, session: Session) => void
+  updateSession: (sessionId: string, updates: Partial<Session>) => void
+  removeSession: (sessionId: string) => void
+
+  // Actions - Changes
+  setChanges: (changes: FileChange[]) => void
+  setChangesLoading: (loading: boolean) => void
+  refreshChanges: () => void
+
+  // Actions - Branch Info
+  setBranchInfo: (branchInfo: BranchInfo) => void
+
+  // Actions - Terminal
+  setTerminal: (terminal: Partial<TerminalState>) => void
+
+  // Actions - UI
+  toggleSidebar: () => void
+  setSidebarCollapsed: (collapsed: boolean) => void
+
+  // Actions - Loading States
+  setWorkspacesLoading: (loading: boolean) => void
+  setWorkspacesError: (error: string | null) => void
+
+  // Demo helpers
+  resetToMockData: () => void
 }
+
+// ============================================
+// Helper Functions
+// ============================================
 
 const createAsyncState = <T>(data: T | null = null): AsyncState<T> => ({
   data,
@@ -26,188 +74,192 @@ const createAsyncState = <T>(data: T | null = null): AsyncState<T> => ({
   error: null,
 })
 
-// ============================================
-// Store Hook
-// ============================================
-
-export function useAppStore() {
-  // Workspace state
-  const [workspaces, setWorkspaces] = useState<AsyncState<Workspace[]>>(
-    createAsyncState(mockWorkspaces)
-  )
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(
-    mockWorkspaces[0]?.id ?? null
-  )
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(
-    mockWorkspaces[0]?.sessions[0]?.id ?? null
-  )
-
-  // Changes state
-  const [changes, setChanges] = useState<AsyncState<FileChange[]>>(
-    createAsyncState(mockFileChanges)
-  )
-
-  // Terminal state
-  const [terminal, setTerminal] = useState<TerminalState>(initialTerminalState)
-
-  // Branch info state
-  const [branchInfo, setBranchInfo] = useState<AsyncState<BranchInfo>>(
-    createAsyncState(mockBranchInfo)
-  )
-
-  // ============================================
-  // Computed Values
-  // ============================================
-
-  const activeWorkspace = useMemo(() => {
-    return workspaces.data?.find((w) => w.id === activeWorkspaceId) ?? null
-  }, [workspaces.data, activeWorkspaceId])
-
-  const activeSession = useMemo(() => {
-    return activeWorkspace?.sessions.find((s) => s.id === activeSessionId) ?? null
-  }, [activeWorkspace, activeSessionId])
-
-  // ============================================
-  // Actions
-  // ============================================
-
-  // Workspace actions
-  const selectWorkspace = useCallback((workspaceId: string) => {
-    setActiveWorkspaceId(workspaceId)
-    // Reset session when workspace changes
-    const workspace = mockWorkspaces.find((w) => w.id === workspaceId)
-    setActiveSessionId(workspace?.sessions[0]?.id ?? null)
-  }, [])
-
-  const addWorkspace = useCallback(() => {
-    // Mock: just toggle loading state for demo
-    setWorkspaces((prev) => ({ ...prev, status: 'loading' }))
-    setTimeout(() => {
-      setWorkspaces((prev) => ({ ...prev, status: 'success' }))
-    }, 1000)
-  }, [])
-
-  const removeWorkspace = useCallback((workspaceId: string) => {
-    setWorkspaces((prev) => ({
-      ...prev,
-      data: prev.data?.filter((w) => w.id !== workspaceId) ?? null,
-    }))
-  }, [])
-
-  // Session actions
-  const selectSession = useCallback((sessionId: string) => {
-    setActiveSessionId(sessionId)
-    // Update terminal connection
-    setTerminal((prev) => ({
-      ...prev,
-      sessionId,
-      isConnected: true,
-      status: 'running',
-    }))
-    // Simulate loading changes for the session
-    setChanges((prev) => ({ ...prev, status: 'loading' }))
-    setTimeout(() => {
-      setChanges(createAsyncState(mockFileChanges))
-    }, 500)
-  }, [])
-
-  const createSession = useCallback(() => {
-    // Mock: toggle loading state for demo
-    setWorkspaces((prev) => ({ ...prev, status: 'loading' }))
-    setTimeout(() => {
-      setWorkspaces((prev) => ({ ...prev, status: 'success' }))
-    }, 1000)
-  }, [])
-
-  const closeSession = useCallback((sessionId: string) => {
-    if (sessionId === activeSessionId) {
-      setTerminal(initialTerminalState)
-    }
-  }, [activeSessionId])
-
-  // Changes actions
-  const refreshChanges = useCallback(() => {
-    setChanges((prev) => ({ ...prev, status: 'loading' }))
-    setTimeout(() => {
-      setChanges(createAsyncState(mockFileChanges))
-    }, 500)
-  }, [])
-
-  // Demo state toggles
-  const setLoadingState = useCallback((target: 'workspaces' | 'changes' | 'branchInfo', status: LoadingState) => {
-    switch (target) {
-      case 'workspaces':
-        setWorkspaces((prev) => ({ ...prev, status, error: status === 'error' ? 'Failed to load workspaces' : null }))
-        break
-      case 'changes':
-        setChanges((prev) => ({ ...prev, status, error: status === 'error' ? 'Failed to read git status' : null }))
-        break
-      case 'branchInfo':
-        setBranchInfo((prev) => ({ ...prev, status, error: status === 'error' ? 'Failed to get branch info' : null }))
-        break
-    }
-  }, [])
-
-  const setEmptyState = useCallback((target: 'workspaces' | 'sessions' | 'changes') => {
-    switch (target) {
-      case 'workspaces':
-        setWorkspaces(createAsyncState([]))
-        break
-      case 'sessions':
-        if (activeWorkspace) {
-          setWorkspaces((prev) => ({
-            ...prev,
-            data: prev.data?.map((w) =>
-              w.id === activeWorkspaceId ? { ...w, sessions: [] } : w
-            ) ?? null,
-          }))
-        }
-        break
-      case 'changes':
-        setChanges(createAsyncState([]))
-        break
-    }
-  }, [activeWorkspaceId, activeWorkspace])
-
-  const resetToMockData = useCallback(() => {
-    setWorkspaces(createAsyncState(mockWorkspaces))
-    setChanges(createAsyncState(mockFileChanges))
-    setBranchInfo(createAsyncState(mockBranchInfo))
-    setActiveWorkspaceId(mockWorkspaces[0]?.id ?? null)
-    setActiveSessionId(mockWorkspaces[0]?.sessions[0]?.id ?? null)
-    setTerminal({
-      sessionId: mockWorkspaces[0]?.sessions[0]?.id ?? null,
-      isConnected: true,
-      status: 'running',
-    })
-  }, [])
-
-  return {
-    // State
-    workspaces,
-    activeWorkspaceId,
-    activeSessionId,
-    activeWorkspace,
-    activeSession,
-    changes,
-    terminal,
-    branchInfo,
-
-    // Actions
-    selectWorkspace,
-    addWorkspace,
-    removeWorkspace,
-    selectSession,
-    createSession,
-    closeSession,
-    refreshChanges,
-
-    // Demo helpers
-    setLoadingState,
-    setEmptyState,
-    resetToMockData,
-  }
+const initialTerminalState: TerminalState = {
+  sessionId: null,
+  ptyId: null,
+  isConnected: false,
+  status: 'idle',
 }
 
-// Re-export types
-export type { AppState, LoadingState, AsyncState }
+// ============================================
+// Store Implementation
+// ============================================
+
+export const useAppStore = create<AppState>((set, get) => ({
+  // Initial Data
+  workspaces: createAsyncState(mockWorkspaces),
+  changes: createAsyncState(mockFileChanges),
+  branchInfo: createAsyncState(mockBranchInfo),
+  terminal: initialTerminalState,
+
+  // Initial UI State
+  activeWorkspaceId: mockWorkspaces[0]?.id ?? null,
+  activeSessionId: mockWorkspaces[0]?.sessions[0]?.id ?? null,
+  sidebarCollapsed: false,
+
+  // Computed Getters
+  getActiveWorkspace: () => {
+    const { workspaces, activeWorkspaceId } = get()
+    return workspaces.data?.find((w) => w.id === activeWorkspaceId) ?? null
+  },
+
+  getActiveSession: () => {
+    const workspace = get().getActiveWorkspace()
+    const { activeSessionId } = get()
+    return workspace?.sessions.find((s) => s.id === activeSessionId) ?? null
+  },
+
+  // Workspace Actions
+  setWorkspaces: (workspaces) =>
+    set((state) => ({
+      workspaces: { ...state.workspaces, data: workspaces, status: 'success' },
+    })),
+
+  selectWorkspace: (workspaceId) => {
+    const workspace = get().workspaces.data?.find((w) => w.id === workspaceId)
+    set({
+      activeWorkspaceId: workspaceId,
+      activeSessionId: workspace?.sessions[0]?.id ?? null,
+    })
+  },
+
+  addWorkspace: (workspace) =>
+    set((state) => ({
+      workspaces: {
+        ...state.workspaces,
+        data: [...(state.workspaces.data ?? []), workspace],
+      },
+    })),
+
+  removeWorkspace: (workspaceId) =>
+    set((state) => ({
+      workspaces: {
+        ...state.workspaces,
+        data: state.workspaces.data?.filter((w) => w.id !== workspaceId) ?? [],
+      },
+      activeWorkspaceId:
+        state.activeWorkspaceId === workspaceId ? null : state.activeWorkspaceId,
+    })),
+
+  // Session Actions
+  selectSession: (sessionId) => {
+    set({
+      activeSessionId: sessionId,
+      terminal: {
+        ...get().terminal,
+        sessionId,
+        isConnected: true,
+        status: 'running',
+      },
+    })
+    // Simulate loading changes
+    get().setChangesLoading(true)
+    setTimeout(() => {
+      set((state) => ({
+        changes: { ...state.changes, status: 'success' },
+      }))
+    }, 300)
+  },
+
+  addSession: (workspaceId, session) =>
+    set((state) => ({
+      workspaces: {
+        ...state.workspaces,
+        data:
+          state.workspaces.data?.map((w) =>
+            w.id === workspaceId ? { ...w, sessions: [...w.sessions, session] } : w
+          ) ?? [],
+      },
+    })),
+
+  updateSession: (sessionId, updates) =>
+    set((state) => ({
+      workspaces: {
+        ...state.workspaces,
+        data:
+          state.workspaces.data?.map((w) => ({
+            ...w,
+            sessions: w.sessions.map((s) =>
+              s.id === sessionId ? { ...s, ...updates } : s
+            ),
+          })) ?? [],
+      },
+    })),
+
+  removeSession: (sessionId) =>
+    set((state) => ({
+      workspaces: {
+        ...state.workspaces,
+        data:
+          state.workspaces.data?.map((w) => ({
+            ...w,
+            sessions: w.sessions.filter((s) => s.id !== sessionId),
+          })) ?? [],
+      },
+      activeSessionId:
+        state.activeSessionId === sessionId ? null : state.activeSessionId,
+    })),
+
+  // Changes Actions
+  setChanges: (changes) =>
+    set((state) => ({
+      changes: { ...state.changes, data: changes, status: 'success' },
+    })),
+
+  setChangesLoading: (loading) =>
+    set((state) => ({
+      changes: { ...state.changes, status: loading ? 'loading' : 'success' },
+    })),
+
+  refreshChanges: () => {
+    set((state) => ({ changes: { ...state.changes, status: 'loading' } }))
+    setTimeout(() => {
+      set((state) => ({ changes: { ...state.changes, status: 'success' } }))
+    }, 500)
+  },
+
+  // Branch Info Actions
+  setBranchInfo: (branchInfo) =>
+    set((state) => ({
+      branchInfo: { ...state.branchInfo, data: branchInfo, status: 'success' },
+    })),
+
+  // Terminal Actions
+  setTerminal: (terminal) =>
+    set((state) => ({
+      terminal: { ...state.terminal, ...terminal },
+    })),
+
+  // UI Actions
+  toggleSidebar: () =>
+    set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+
+  setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+
+  // Loading State Actions
+  setWorkspacesLoading: (loading) =>
+    set((state) => ({
+      workspaces: { ...state.workspaces, status: loading ? 'loading' : 'success' },
+    })),
+
+  setWorkspacesError: (error) =>
+    set((state) => ({
+      workspaces: { ...state.workspaces, status: error ? 'error' : 'success', error },
+    })),
+
+  // Demo helpers
+  resetToMockData: () =>
+    set({
+      workspaces: createAsyncState(mockWorkspaces),
+      changes: createAsyncState(mockFileChanges),
+      branchInfo: createAsyncState(mockBranchInfo),
+      activeWorkspaceId: mockWorkspaces[0]?.id ?? null,
+      activeSessionId: mockWorkspaces[0]?.sessions[0]?.id ?? null,
+      terminal: {
+        sessionId: mockWorkspaces[0]?.sessions[0]?.id ?? null,
+        ptyId: null,
+        isConnected: true,
+        status: 'running',
+      },
+    }),
+}))

@@ -1,112 +1,112 @@
-import { useState } from 'react'
-import { Group, Panel, Separator } from 'react-resizable-panels'
+import { TooltipProvider } from '@renderer/components/ui/tooltip'
 import './app.css'
+import { AppLayout, PanelLayout } from './layout'
 import { InspectorPanel } from './features/inspector'
 import { Sidebar } from './features/sidebar'
 import { TerminalPanel } from './features/terminal'
 import { useAppStore } from './store'
 
 function App(): React.JSX.Element {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-
   const {
     // State
     workspaces,
     activeWorkspaceId,
     activeSessionId,
-    activeSession,
     changes,
     terminal,
     branchInfo,
+    sidebarCollapsed,
+
+    // Computed
+    getActiveSession,
 
     // Actions
     selectWorkspace,
-    addWorkspace,
     selectSession,
-    createSession,
     refreshChanges,
+    toggleSidebar,
     resetToMockData,
+    setTerminal,
   } = useAppStore()
+
+  const activeSession = getActiveSession()
 
   // Terminal actions (mock for now)
   const handleStartTerminal = () => {
     console.log('Start terminal for session:', activeSessionId)
+    setTerminal({ isConnected: true, status: 'running' })
   }
 
   const handleStopTerminal = () => {
     console.log('Stop terminal for session:', activeSessionId)
+    setTerminal({ isConnected: false, status: 'idle' })
   }
 
   const handleRestartTerminal = () => {
     console.log('Restart terminal for session:', activeSessionId)
+    setTerminal({ isConnected: false, status: 'idle' })
+    setTimeout(() => {
+      setTerminal({ isConnected: true, status: 'running' })
+    }, 500)
+  }
+
+  // Workspace actions (mock for now)
+  const handleAddWorkspace = () => {
+    console.log('Add workspace')
+    // TODO: Open file dialog via IPC
+  }
+
+  const handleCreateSession = (workspaceId: string) => {
+    console.log('Create session for workspace:', workspaceId)
+    // TODO: Call IPC to create session
   }
 
   // Merge action (mock for now)
   const handleMerge = () => {
     console.log('Merge session:', activeSessionId)
+    // TODO: Open merge dialog
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg)] text-[var(--text)]">
-      <Group orientation="horizontal" id="main-layout">
-        {/* Left: Sidebar with Workspace + Session list */}
-        {!sidebarCollapsed && (
-          <>
-            <Panel
-              id="sidebar"
-              defaultSize={15}
-              minSize={12}
-              maxSize={25}
-              className="flex"
-            >
-              <Sidebar
-                workspaces={workspaces}
-                activeWorkspaceId={activeWorkspaceId}
-                activeSessionId={activeSessionId}
-                onWorkspaceSelect={selectWorkspace}
-                onSessionSelect={selectSession}
-                onAddWorkspace={addWorkspace}
-                onNewSession={createSession}
-                onToggleCollapse={() => setSidebarCollapsed(true)}
-                onRetry={resetToMockData}
-              />
-            </Panel>
-            <Separator className="w-px bg-[var(--separator)] transition-colors hover:bg-[var(--border-active)]" />
-          </>
-        )}
-
-        {/* Middle: Terminal container */}
-        <Panel id="terminal" minSize={30}>
-          <TerminalPanel
-            session={activeSession}
-            terminal={terminal}
-            sidebarCollapsed={sidebarCollapsed}
-            onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
-            onStartTerminal={handleStartTerminal}
-            onStopTerminal={handleStopTerminal}
-            onRestartTerminal={handleRestartTerminal}
-          />
-        </Panel>
-
-        <Separator className="w-px bg-[var(--separator)] transition-colors hover:bg-[var(--border-active)]" />
-
-        {/* Right: Changes list + Branch info */}
-        <Panel
-          id="inspector"
-          defaultSize={22}
-          minSize={15}
-          maxSize={40}
-          className="flex"
-        >
-          <InspectorPanel
-            changes={changes}
-            branchInfo={branchInfo}
-            onRefreshChanges={refreshChanges}
-            onMerge={handleMerge}
-          />
-        </Panel>
-      </Group>
-    </div>
+    <TooltipProvider delayDuration={300}>
+      <AppLayout>
+        <PanelLayout
+          sidebarCollapsed={sidebarCollapsed}
+          sidebar={
+            <Sidebar
+              workspaces={workspaces}
+              activeWorkspaceId={activeWorkspaceId}
+              activeSessionId={activeSessionId}
+              onWorkspaceSelect={selectWorkspace}
+              onSessionSelect={selectSession}
+              onAddWorkspace={handleAddWorkspace}
+              onCreateSession={handleCreateSession}
+              onToggleCollapse={toggleSidebar}
+              onRetry={resetToMockData}
+            />
+          }
+          main={
+            <TerminalPanel
+              session={activeSession}
+              terminal={terminal}
+              sidebarCollapsed={sidebarCollapsed}
+              onToggleSidebar={toggleSidebar}
+              onStartTerminal={handleStartTerminal}
+              onStopTerminal={handleStopTerminal}
+              onRestartTerminal={handleRestartTerminal}
+            />
+          }
+          inspector={
+            <InspectorPanel
+              changes={changes}
+              branchInfo={branchInfo}
+              onRefreshChanges={refreshChanges}
+              onMerge={handleMerge}
+            />
+          }
+        />
+      </AppLayout>
+    </TooltipProvider>
   )
 }
 

@@ -9,7 +9,12 @@
       "Bash(npm run typecheck:web:*)",
       "Bash(xargs:*)",
       "Bash(npm run typecheck:*)",
-      "Bash(timeout 15s npm run dev:*)"
+      "Bash(timeout 15s npm run dev:*)",
+      "Bash(tree:*)",
+      "Bash(npm show:*)",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

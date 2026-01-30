@@ -43,6 +43,7 @@ export type FileChangeStatus = 'added' | 'modified' | 'deleted' | 'renamed' | 'u
 
 export interface TerminalState {
   sessionId: string | null
+  ptyId: string | null
   isConnected: boolean
   status: 'idle' | 'running' | 'error'
 }
@@ -71,59 +72,12 @@ export interface BranchInfo {
 }
 
 // ============================================
-// View Model Types (for renderer state)
+// Git Types
 // ============================================
 
-export interface AppState {
-  workspaces: AsyncState<Workspace[]>
-  activeWorkspaceId: string | null
-  activeSessionId: string | null
-  changes: AsyncState<FileChange[]>
-  terminal: TerminalState
-  branchInfo: AsyncState<BranchInfo>
-}
-
-// ============================================
-// Legacy types for backward compatibility
-// ============================================
-
-/** @deprecated Use Workspace instead */
-export interface Project {
-  id: string
-  name: string
-  workspaces: LegacyWorkspace[]
-}
-
-/** @deprecated Use Session instead */
-export interface LegacyWorkspace {
-  id: string
-  name: string
-  branch: string
-  status: 'ready' | 'conflicts' | 'archived' | 'active'
-  changes: {
-    added: number
-    removed: number
-  }
-  isActive?: boolean
-}
-
-// Chat types (kept for reference, not used in worktree manager)
-export interface Message {
-  id: string
-  type: 'user' | 'assistant' | 'error'
-  content: string
-  timestamp: Date
-  metadata?: {
-    toolCalls?: number
-    messages?: number
-    filesChanged?: number
-  }
-}
-
-// Terminal types (legacy)
-export interface TerminalLine {
-  id: string
-  type: 'prompt' | 'command' | 'output'
-  content: string
-  branch?: string
+export interface MergeResult {
+  success: boolean
+  conflicted: boolean
+  conflicts?: string[]
+  message: string
 }

@@ -1,236 +1,596 @@
-# 产品需求文档：CLI Worktree 管理器
+# CLI Worktree 管理器 - 产品需求文档
 
-**版本**：1.0
+**版本**：2.0
 **日期**：2026-01-30
-**作者**：Sarah（产品负责人）
-**质量评分**：92/100
 
 ---
 
-## 执行摘要
+## 概述
 
-这是一款面向单人开发者的桌面应用，用于在同一仓库中并行运行多个 CLI 编程代理（如 codex、claude code），同时避免相互覆盖与冲突。核心机制是为每个 session 创建独立的 git worktree，以隔离改动，并通过统一界面管理 workspace、session、终端与改动列表。
+一款 Electron 桌面应用，为每个 CLI 编程代理（codex、claude code 等）创建独立的 git worktree，避免多代理并行时的文件冲突。
 
-预期价值是显著降低并行 AI 编码的冲突风险与心理负担，让用户能快速开多个 agent、清晰看到各自改动，并在合适时机进行合并。
+**核心功能**：
+- 管理 Workspace（git 仓库）
+- 管理 Session（worktree + 终端）
+- 显示 Session 改动文件列表
+- 合并 Session 到目标分支
 
----
-
-## 问题陈述
-
-**现状**：多个 CLI agent 并行修改同一仓库时，容易发生改动覆盖、文件冲突和状态混乱。手动创建分支/worktree 与终端管理成本高、易出错。
-
-**解决方案**：提供一个桌面 UI 来管理 workspace 与 session，为每个 session 自动创建 worktree，提供嵌入式终端，并展示该 session 的改动文件列表；同时提供合并入口，允许选择目标分支并执行 merge。
-
-**业务影响**：提升并行 AI 编码的可控性与信心，减少冲突与误覆盖的风险。
+**技术栈**：Electron + React + TypeScript + xterm.js + node-pty
 
 ---
 
-## 成功指标
+## 功能规格
 
-**主要指标：**
-- 定性：用户能够在一个仓库中同时运行多个 CLI agent 而不担心冲突。
-- 操作性：用户可在数次点击内创建/切换多个 session。
+### 1. Workspace 管理
 
-**验证方式**：用户自评与日常使用中的主观验证。
+#### 1.1 添加 Workspace
+
+**触发方式**：点击"+ 添加 Workspace"按钮
+
+**流程**：
+1. 打开系统文件选择器（仅目录模式）
+2. 用户选择目录
+3. 验证目录是否为 git 仓库（检查 `.git` 存在）
+4. 验证通过 → 保存到配置，显示在列表
+5. 验证失败 → Toast 提示"所选目录不是 Git 仓库"
+
+**边界处理**：
+| 情况 | 处理 |
+|------|------|
+| 目录已添加 | 提示"已存在"，高亮现有项 |
+| 选择 .git 目录 | 自动使用父目录 |
+
+#### 1.2 Workspace 列表
+
+**显示内容**：
+- 名称（目录名）
+- 路径
+- Session 数量
+
+**排序**：按添加时间倒序
+
+**持久化**：应用重启后保持
+
+#### 1.3 移除 Workspace
+
+**触发方式**：右键菜单 → 移除
+
+**确认对话框内容**：
+```
+移除 Workspace: {name}
+
+相关 Session 将被删除：
+- Session 1
+- Session 2
+
+Worktree 目录处理：
+○ 保留
+● 同时删除 (推荐)
+
+[取消] [确认]
+```
+
+**操作**：
+- 删除 Session 元数据
+- 根据选择删除或保留 worktree 目录
+- 不删除原始仓库
+
+#### 1.4 Workspace 状态检测
+
+**时机**：应用启动时
+
+**检测**：仓库路径是否有效
+
+**无效时**：
+- 显示警告图标
+- 提供"重新定位"和"移除"选项
 
 ---
 
-## 用户画像
+### 2. Session 管理
 
-### 主要用户：单人重度开发者
-- **角色**：使用 AI 编码工具的开发者
-- **目标**：多 agent 并行工作但互不干扰
-- **痛点**：担心冲突与覆盖；手动 worktree/终端管理繁琐
-- **技术水平**：高级
+#### 2.1 创建 Session
+
+**触发方式**：选中 Workspace → 点击"新建 Session"
+
+**流程**：
+1. 获取当前分支（HEAD）
+2. 生成分支名：`session/{timestamp}-{random4}`（如 `session/20260130-a1b2`）
+3. 创建分支：`git branch {branch}`
+4. 创建 worktree：`git worktree add {path} {branch}`
+   - 路径：`{repo}/.worktrees/{branch}`
+5. 创建 Session 记录，名称：`Session {N}`
+6. 自动打开新创建的 Session
+
+**边界处理**：
+| 情况 | 处理 |
+|------|------|
+| 分支名冲突 | 自动添加随机后缀重试 |
+| worktree 创建失败 | 显示错误，不创建 Session |
+| 磁盘空间不足 | 显示错误 |
+
+#### 2.2 打开 Session
+
+**触发方式**：点击 Session 列表项
+
+**操作**：
+1. 在终端区域启动 shell，工作目录为 worktree 路径
+2. 右侧显示该 Session 的改动文件列表
+3. 列表项高亮显示
+
+**切换行为**：切换 Session 时保留之前的终端状态
+
+#### 2.3 编辑 Session 名称
+
+**触发方式**：双击名称
+
+**交互**：
+- 显示输入框，预填当前名称
+- Enter 或失焦保存
+- Escape 取消
+- 空名称恢复原值
+- 最大 50 字符
+
+#### 2.4 关闭 Session
+
+**触发方式**：Session 项上的关闭图标 / 右键菜单
+
+**操作**：
+- 停止终端进程
+- 保留 worktree 和改动
+- Session 状态变为 `closed`
+- 仍在列表显示，可重新打开
+
+#### 2.5 删除 Session
+
+**触发方式**：右键菜单 → 删除
+
+**确认对话框内容**：
+```
+删除 Session: {name}
+
+将永久删除：
+- Worktree 目录及所有改动 ({n} 个文件已修改)
+- 分支: {branch}
+
+⚠️ 此操作无法撤销
+
+[取消] [确认删除]
+```
+
+**操作**：
+1. 停止终端进程
+2. 执行 `git worktree remove {path}`
+3. 执行 `git branch -D {branch}`
+4. 删除 Session 记录
+
+**边界处理**：
+| 情况 | 处理 |
+|------|------|
+| 终端正在运行 | 警告后强制终止 |
+| worktree 被占用 | 显示错误，提供手动清理指引 |
 
 ---
 
-## 用户故事与验收标准
+### 3. 嵌入式终端
 
-### 故事 1：管理 Workspace
-**作为** 单人开发者
-**我想要** 添加并管理 workspace（项目）
-**以便** 在不同仓库间复用 session 工作流
+#### 3.1 终端配置
 
-**验收标准：**
-- [ ] 用户可以选择本地 git 仓库路径添加 workspace
-- [ ] workspace 列表可持久化保存
-- [ ] 用户可移除 workspace 与其 session 元数据（不删除仓库本体）
+| 配置项 | 值 |
+|--------|-----|
+| Shell | 用户默认 $SHELL 或 /bin/zsh |
+| 工作目录 | Session 的 worktree 路径 |
+| 环境变量 | 继承用户环境 |
+| 默认尺寸 | 80 × 24 |
+| 颜色 | 256 色 + True Color |
 
-### 故事 2：创建并使用 Session
-**作为** 单人开发者
-**我想要** 创建隔离的 session
-**以便** 每个 agent 独立修改
+#### 3.2 终端功能
 
-**验收标准：**
-- [ ] 创建 session 时基于当前分支创建新的 worktree
-- [ ] 打开 session 时自动显示对应 worktree 的终端
-- [ ] session 名称自动生成但可编辑
-- [ ] 用户可关闭 session，并可选择删除对应 worktree
+- 键盘输入（含 Ctrl 组合键）
+- 复制粘贴（Cmd+C/V）
+- 鼠标滚动
+- Tab 补全（shell 提供）
+- Ctrl+C 中断
+- 尺寸随窗口自适应
 
-### 故事 3：查看 Session 改动
-**作为** 单人开发者
-**我想要** 查看 session 修改的文件
-**以便** 确认改动隔离并保持可见性
+#### 3.3 错误处理
 
-**验收标准：**
-- [ ] 右侧面板显示文件列表及状态（新增/修改/删除）
-- [ ] 列表仅显示当前 session 的 worktree 改动
-- [ ] git 状态变化时列表能更新
+**Shell 启动失败时**：
+```
+┌────────────────────────────────┐
+│  ⚠️ 终端启动失败               │
+│                                │
+│  无法启动 shell: {shell}       │
+│  错误: {message}               │
+│                                │
+│  [重试]                        │
+└────────────────────────────────┘
+```
 
-### 故事 4：合并入口
-**作为** 单人开发者
-**我想要** 将 session 合并到指定分支
-**以便** 有意识地整合改动
-
-**验收标准：**
-- [ ] 用户可选择源（session 分支）与目标分支
-- [ ] 确认后执行 `git merge`
-- [ ] 明确报告合并结果（成功或冲突）
+**Shell 异常退出**：显示退出码，提供"重启终端"按钮
 
 ---
 
-## 功能需求
+### 4. 改动文件列表
 
-### 核心功能
+#### 4.1 显示内容
 
-**功能 1：Workspace 管理**
-- 描述：创建、列出与删除本地仓库 workspace
-- 用户流程：
-  1) 点击“添加 Workspace”并选择仓库路径
-  2) 校验为 git 仓库
-  3) workspace 出现在左侧列表
-- 边界情况：
-  - 选择了非 git 目录 → 提示错误
-  - 仓库被移动/删除 → 显示警告并允许移除
-- 错误处理：清晰错误提示 + 可重试
+**位置**：右侧面板
 
-**功能 2：Session 管理（Worktree）**
-- 描述：创建、打开、关闭、删除 session，并为其创建 worktree
-- 用户流程：
-  1) 选中 workspace 点击“新建 Session”
-  2) 基于当前分支创建 worktree
-  3) session 出现在列表中
-  4) 打开 session 显示终端与文件列表
-- 边界情况：
-  - worktree 创建失败 → 提示错误且不创建 session
-  - 删除 session 时存在 git 操作 → 弹窗阻止并确认
-- 错误处理：可操作的错误信息与重试入口
+**数据来源**：`git status --porcelain` （在 worktree 目录执行）
 
-**功能 3：嵌入式终端（xterm）**
-- 描述：每个 session 对应一个 worktree 终端
-- 用户流程：
-  1) 打开 session
-  2) 终端在 worktree 目录启动
-  3) 用户手动运行 codex / claude code 等
-- 边界情况：
-  - shell 启动失败 → 显示错误并支持重试
-- 错误处理：终端错误态 + 重试按钮
+**分组显示**：
+```
+▼ 新增 (2)
+  + src/components/Payment.tsx
+  + src/utils/stripe.ts
 
-**功能 4：改动文件列表**
-- 描述：右侧展示当前 session 的改动文件
-- 用户流程：
-  1) 在终端修改文件
-  2) 应用通过 git status 获取改动
-  3) 右侧更新文件列表
-- 边界情况：
-  - 大仓库性能波动 → 对刷新做防抖
-- 错误处理：显示“无法读取 git 状态”并可重试
+▼ 修改 (2)
+  ~ src/App.tsx
+  ~ src/routes/index.ts
 
-**功能 5：合并入口**
-- 描述：将 session 分支合并到目标分支
-- 用户流程：
-  1) 点击“合并”
-  2) 选择源分支与目标分支
-  3) 确认后执行 merge
-- 边界情况：
-  - 发生冲突 → 提示冲突并停止（不自动解决）
-  - 目标分支工作区不干净 → 阻止合并并提示清理
-- 错误处理：显示命令结果摘要与后续建议
+▼ 删除 (1)
+  - src/legacy/checkout.js
+```
 
-### 非目标范围
-- 文件 diff 预览
+**图标颜色**：
+- `+` 新增：绿色 #22c55e
+- `~` 修改：黄色 #eab308
+- `-` 删除：红色 #ef4444
+
+**空状态**：显示"暂无改动"
+
+#### 4.2 自动刷新
+
+**机制**：
+1. 使用 chokidar 监听 worktree 目录
+2. 检测到变化后防抖 500ms
+3. 执行 `git status --porcelain`
+4. 更新列表
+
+**手动刷新**：提供刷新按钮
+
+---
+
+### 5. 合并功能
+
+#### 5.1 合并对话框
+
+**触发方式**：Session 面板的"合并"按钮
+
+**对话框内容**：
+```
+┌────────────────────────────────────┐
+│          合并 Session              │
+├────────────────────────────────────┤
+│                                    │
+│  源分支:  {session-branch}         │
+│                                    │
+│  目标分支: [main          ▼]       │
+│                                    │
+│  [取消]            [确认合并]      │
+│                                    │
+└────────────────────────────────────┘
+```
+
+**目标分支选项**：列出所有本地分支，默认为 Session 的 baseBranch
+
+#### 5.2 合并执行
+
+**前置检查**：
+1. Session 有未提交改动 → 提示先提交或选择自动提交
+2. 目标分支工作区不干净 → 阻止合并，提示清理
+
+**执行**：
+```bash
+cd {repo}
+git checkout {target-branch}
+git merge {session-branch}
+```
+
+**结果处理**：
+
+成功：
+```
+✅ 合并成功
+
+已将 {session-branch} 合并到 {target}
+
+合并的文件:
+• file1.tsx
+• file2.ts
+
+[关闭] [删除 Session]
+```
+
+冲突：
+```
+⚠️ 存在冲突
+
+冲突文件:
+• src/App.tsx
+• src/routes/index.ts
+
+请在 {target} 分支手动解决后提交。
+
+[关闭]
+```
+
+---
+
+## UI 布局
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  CLI Worktree Manager                              [—] [□] [×]      │
+├────────────────────┬────────────────────────────┬───────────────────┤
+│ WORKSPACES         │                            │ CHANGES           │
+│                    │                            │                   │
+│ ▼ my-project       │                            │ ▼ Modified (3)    │
+│   ├─ Session 1 ●   │       Terminal Area        │   ~ App.tsx       │
+│   └─ Session 2 ○   │                            │   ~ index.ts      │
+│                    │                            │   ~ package.json  │
+│ ▼ another-repo     │                            │                   │
+│   └─ Session 1     │                            │ ▼ Untracked (1)   │
+│                    │                            │   + new.ts        │
+│                    │                            │                   │
+│ [+ Add Workspace]  │                            │ [Merge] [刷新]    │
+├────────────────────┴────────────────────────────┴───────────────────┤
+│ Session: my-project/Session 1 | .worktrees/session-20260130-a1b2    │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### 区域尺寸
+
+| 区域 | 默认宽度 | 最小宽度 | 可拖拽调整 |
+|------|----------|----------|------------|
+| 左侧边栏 | 240px | 180px | ✅ |
+| 终端区域 | 弹性 | 400px | ✅ |
+| 右侧边栏 | 280px | 200px | ✅ |
+
+### 配色（深色主题）
+
+| 元素 | 颜色 |
+|------|------|
+| 主背景 | #1e1e1e |
+| 边栏背景 | #252526 |
+| 文字主色 | #cccccc |
+| 文字次色 | #858585 |
+| 强调色/选中 | #0e7490 |
+| 边框 | #3c3c3c |
+
+### 快捷键
+
+| 快捷键 | 动作 |
+|--------|------|
+| Cmd+N | 新建 Session |
+| Cmd+W | 关闭当前 Session |
+| Cmd+Tab | 切换 Session |
+| Cmd+R | 刷新改动列表 |
+| Cmd+Shift+M | 打开合并对话框 |
+
+---
+
+## 数据模型
+
+### Workspace
+
+```typescript
+interface Workspace {
+  id: string;           // UUID
+  name: string;         // 显示名称（目录名）
+  path: string;         // 仓库绝对路径
+  createdAt: string;    // ISO 时间戳
+}
+```
+
+### Session
+
+```typescript
+interface Session {
+  id: string;           // UUID
+  workspaceId: string;  // 关联 Workspace
+  name: string;         // 显示名称
+  branchName: string;   // Git 分支名
+  worktreePath: string; // Worktree 绝对路径
+  baseBranch: string;   // 创建时的基础分支
+  status: 'active' | 'closed' | 'error';
+  createdAt: string;
+}
+```
+
+### FileStatus
+
+```typescript
+interface FileStatus {
+  path: string;
+  status: 'added' | 'modified' | 'deleted' | 'renamed' | 'untracked';
+}
+```
+
+### MergeResult
+
+```typescript
+interface MergeResult {
+  success: boolean;
+  conflicts?: string[];
+  mergedFiles?: string[];
+  errorMessage?: string;
+}
+```
+
+### 存储配置
+
+```typescript
+interface StoreSchema {
+  workspaces: Workspace[];
+  sessions: Session[];
+  preferences: {
+    terminalFontSize: number;      // 默认 13
+    terminalFontFamily: string;    // 默认 'SF Mono, Monaco, Consolas, monospace'
+    autoRefreshInterval: number;   // 默认 1000ms
+    confirmBeforeDelete: boolean;  // 默认 true
+  };
+}
+```
+
+**存储路径**：
+- macOS: `~/Library/Application Support/cli-worktree-manager/config.json`
+- Windows: `%APPDATA%/cli-worktree-manager/config.json`
+- Linux: `~/.config/cli-worktree-manager/config.json`
+
+---
+
+## 技术架构
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                     Renderer Process                          │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐              │
+│  │  React UI  │  │  xterm.js  │  │  Zustand   │              │
+│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘              │
+│        └───────────────┼───────────────┘                      │
+│                        │                                      │
+│               IPC (preload.js)                                │
+└────────────────────────┼─────────────────────────────────────┘
+                         │
+┌────────────────────────┼─────────────────────────────────────┐
+│                  Main Process                                 │
+│                        │                                      │
+│  ┌────────────┐  ┌─────┴──────┐  ┌────────────┐              │
+│  │ GitService │  │  PTYManager │  │ConfigStore │              │
+│  │(simple-git)│  │ (node-pty) │  │(electron-  │              │
+│  │            │  │            │  │ store)     │              │
+│  └─────┬──────┘  └─────┬──────┘  └────────────┘              │
+│        │               │                                      │
+│        ▼               ▼                                      │
+│   [Git CLI]       [Shell]                                     │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### IPC 通道
+
+```typescript
+const IPC_CHANNELS = {
+  // Workspace
+  'workspace:add': (path: string) => Workspace | Error,
+  'workspace:list': () => Workspace[],
+  'workspace:remove': (id: string, deleteWorktrees: boolean) => void,
+
+  // Session
+  'session:create': (workspaceId: string) => Session,
+  'session:list': (workspaceId: string) => Session[],
+  'session:open': (sessionId: string) => void,
+  'session:close': (sessionId: string) => void,
+  'session:delete': (sessionId: string) => void,
+  'session:rename': (sessionId: string, name: string) => void,
+
+  // Terminal
+  'terminal:data': (sessionId: string, data: string) => void,  // 双向
+  'terminal:resize': (sessionId: string, cols: number, rows: number) => void,
+
+  // Git
+  'git:status': (worktreePath: string) => FileStatus[],
+  'git:merge': (repo: string, source: string, target: string) => MergeResult,
+  'git:branches': (repo: string) => string[],
+
+  // File Watcher
+  'file:changed': (sessionId: string) => void,  // Main → Renderer
+};
+```
+
+### Git 命令参考
+
+```bash
+# 检测 Git 仓库
+test -d {path}/.git
+
+# 获取当前分支
+git -C {repo} rev-parse --abbrev-ref HEAD
+
+# 列出分支
+git -C {repo} branch --list
+
+# 创建分支
+git -C {repo} branch {branch}
+
+# 创建 worktree
+git -C {repo} worktree add {worktree-path} {branch}
+
+# 删除 worktree
+git -C {repo} worktree remove {worktree-path}
+
+# 删除分支
+git -C {repo} branch -D {branch}
+
+# 获取状态
+git -C {worktree} status --porcelain
+
+# 合并
+git -C {repo} checkout {target} && git -C {repo} merge {source}
+```
+
+---
+
+## 依赖
+
+### npm 包
+
+| 包 | 版本 | 用途 |
+|----|------|------|
+| electron | ^28.0.0 | 桌面框架 |
+| react | ^18.2.0 | UI |
+| xterm | ^5.3.0 | 终端前端 |
+| xterm-addon-fit | ^0.8.0 | 终端自适应 |
+| node-pty | ^1.0.0 | PTY 后端 |
+| simple-git | ^3.20.0 | Git 操作 |
+| electron-store | ^8.1.0 | 配置持久化 |
+| chokidar | ^3.5.3 | 文件监听 |
+| zustand | ^4.4.0 | 状态管理 |
+
+### 系统依赖
+
+- Git ≥ 2.20（需在 PATH 中）
+
+---
+
+## 性能要求
+
+| 操作 | 目标 |
+|------|------|
+| Session 创建 | < 3s |
+| 终端启动 | < 500ms |
+| Git status 刷新 | < 1s（< 10k 文件仓库）|
+| UI 响应 | < 100ms |
+
+---
+
+## MVP 范围
+
+**包含**：
+- Workspace 增删查
+- Session 增删查 + 重命名
+- 嵌入式终端
+- 改动文件列表（自动刷新）
+- 合并到目标分支
+
+**不包含**：
+- Diff 预览
 - 文件内容查看
 - Stage/unstage 操作
 - 自动冲突解决
-- 多人协作
-- 远程仓库管理
+- 远程仓库操作
 
 ---
 
-## 技术约束
+## 术语
 
-### 性能
-- git 状态刷新对用户应接近实时（典型仓库 < 1s）
-- git 操作不可阻塞 UI，需异步执行
-
-### 安全
-- 本地离线运行，不上传仓库内容
-
-### 集成
-- 依赖系统已安装 git CLI
-- 终端使用 xterm.js + PTY 桥接
-
-### 技术栈
-- Electron + React + TypeScript（现有项目栈）
-- xterm.js
-- Node child_process 调用 git 命令
+| 术语 | 定义 |
+|------|------|
+| Workspace | 已注册的本地 Git 仓库 |
+| Session | 一个 worktree + 关联终端 |
+| Worktree | Git 的同仓库多检出目录特性 |
 
 ---
 
-## MVP 范围与阶段规划
-
-### Phase 1：MVP（首版必需）
-- Workspace 创建/列表/删除
-- Session 创建/打开/关闭/删除
-- 每个 session 的嵌入式终端
-- 当前 session 改动文件列表
-- 合并入口（选择源/目标分支并执行 `git merge`）
-
-**MVP 定义**：单人开发者可在一个仓库中并行开多个 session，各自运行 CLI agent，查看改动文件列表，并在需要时进行合并。
-
-### Phase 2：增强
-- 改动文件 diff 预览
-- Session 备注与快照
-- 合并冲突辅助 UI（不自动解决）
-
-### 未来考虑
-- Session 模板/预设
-- Session 活动记录
-
----
-
-## 风险评估
-
-| 风险 | 概率 | 影响 | 缓解策略 |
-|------|------|------|----------|
-| git merge 冲突频繁 | 中 | 高 | 清晰冲突态与提示；不自动解决 |
-| worktree 清理失败导致残留目录 | 中 | 中 | 记录路径并提供清理入口 |
-| 大仓库导致状态刷新慢 | 中 | 中 | 防抖 + 手动刷新按钮 |
-
----
-
-## 依赖与阻塞项
-
-**依赖：**
-- 系统已安装 git 并在 PATH 中可用
-- Electron 下 PTY 兼容性
-
-**已知阻塞项：**
-- 暂无
-
----
-
-## 附录
-
-### 术语表
-- **Workspace**：已注册的本地 git 仓库
-- **Session**：基于 worktree 的工作单元
-- **Worktree**：同一仓库的独立检出
-
-### 参考
-- 暂无
-
----
-
-*本 PRD 通过交互式需求澄清与质量评估生成，以保证业务、功能、体验与技术维度覆盖完整。*
+*文档版本 2.0 | 2026-01-30*
