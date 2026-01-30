@@ -1,8 +1,8 @@
 import { Badge } from '../../components/ui'
-import type { Workspace } from '../../types'
+import type { LegacyWorkspace } from '../../types'
 
 interface WorkspaceCardProps {
-  workspace: Workspace
+  workspace: LegacyWorkspace
   isActive?: boolean
   onClick?: () => void
 }

@@ -1,27 +1,34 @@
-import type { FileChange, TerminalLine } from '../../types'
+import type { FileChange, BranchInfo, AsyncState } from '../../types'
+import { BranchInfoCard } from './BranchInfoCard'
 import { ChangesTab } from './ChangesTab'
-import { Terminal } from './Terminal'
 
 interface InspectorPanelProps {
-  files: FileChange[]
-  terminalLines: TerminalLine[]
-  branch?: string
+  changes: AsyncState<FileChange[]>
+  branchInfo: AsyncState<BranchInfo>
   onFileClick?: (path: string) => void
+  onRefreshChanges?: () => void
+  onMerge?: () => void
+  onRetryBranchInfo?: () => void
 }
 
 export function InspectorPanel({
-  files,
-  terminalLines,
-  branch,
+  changes,
+  branchInfo,
   onFileClick,
+  onRefreshChanges,
+  onMerge,
+  onRetryBranchInfo,
 }: InspectorPanelProps) {
   return (
     <aside className="flex h-full w-full flex-col overflow-hidden border-l border-[var(--separator)] bg-[var(--bg-secondary)]">
+      {/* Changes list */}
       <div className="flex-1 overflow-y-auto p-3">
-        <ChangesTab files={files} onFileClick={onFileClick} />
+        <ChangesTab changes={changes} onFileClick={onFileClick} onRefresh={onRefreshChanges} />
       </div>
-      <div className="shrink-0 border-t border-[var(--separator)]">
-        <Terminal lines={terminalLines} branch={branch} />
+
+      {/* Branch info card */}
+      <div className="shrink-0 border-t border-[var(--separator)] p-3">
+        <BranchInfoCard branchInfo={branchInfo} onMerge={onMerge} onRetry={onRetryBranchInfo} />
       </div>
     </aside>
   )
