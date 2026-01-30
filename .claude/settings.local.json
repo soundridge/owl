@@ -8,7 +8,8 @@
       "Bash(npm run build:*)",
       "Bash(npm run typecheck:web:*)",
       "Bash(xargs:*)",
-      "Bash(npm run typecheck:*)"
+      "Bash(npm run typecheck:*)",
+      "Bash(timeout 15s npm run dev:*)"
     ]
   }
 }
