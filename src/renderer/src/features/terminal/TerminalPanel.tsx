@@ -2,6 +2,7 @@ import type { Session, TerminalState } from '../../types'
 import { Button } from '@renderer/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip'
 import {
+  ChevronRight,
   FolderOpen,
   PanelLeft,
   Play,
@@ -33,243 +34,175 @@ export function TerminalPanel({
   const hasError = terminal.status === 'error'
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-card text-card-foreground">
+    <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#1e1e1e] text-foreground">
       {/* Header */}
-      <div className="shrink-0 border-b border-border/60">
-        <div className="flex items-center window-drag">
-          {/* Sidebar toggle when collapsed */}
+      <div className="flex h-[42px] shrink-0 items-center justify-between border-b border-white/5 bg-[#1e1e1e] px-4 window-drag">
+        <div className="flex items-center gap-3">
+          {/* Sidebar Left Toggle */}
           {sidebarCollapsed && (
-            <div className="flex h-[52px] items-center border-r border-border/60 pl-[78px] pr-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={onToggleSidebar}
-                    className="window-no-drag flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground"
-                  >
-                    <PanelLeft className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Show sidebar</TooltipContent>
-              </Tooltip>
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={onToggleSidebar}
+                  className="window-no-drag flex items-center justify-center rounded-sm text-muted-foreground/60 transition-colors hover:text-foreground"
+                >
+                  <PanelLeft className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Show sidebar</TooltipContent>
+            </Tooltip>
           )}
 
-          {/* Session header */}
-          <div className="flex h-[52px] flex-1 items-center justify-between px-4">
-            <div className="flex flex-col gap-0.5">
-              {session
-                ? (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-foreground">
-                          {session.name}
-                        </span>
-                        <span
-                          className={`inline-flex h-2 w-2 rounded-full ${
-                            isConnected
-                              ? 'bg-[color:var(--success)]'
-                              : hasError
-                                ? 'bg-destructive'
-                                : 'bg-muted-foreground/50'
-                          }`}
-                        />
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <FolderOpen className="h-3 w-3" />
-                        <span className="max-w-[300px] truncate" title={session.worktreePath}>
-                          {session.worktreePath}
-                        </span>
-                      </div>
-                    </>
-                  )
-                : (
-                    <span className="text-sm text-muted-foreground">
-                      No session selected
-                    </span>
-                  )}
-            </div>
+          {/* Breadcrumbs */}
+          {session
+            ? (
+              <div className="flex items-center gap-1.5 text-[13px] font-medium leading-none">
+                <span className="flex items-center gap-1.5 text-muted-foreground/60">
+                  <FolderOpen className="h-3.5 w-3.5" />
+                  <span>Owlet</span>
+                </span>
+                <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
+                <span className="flex items-center gap-1.5 text-foreground">
+                  <TerminalIcon className="h-3.5 w-3.5 text-primary" />
+                  <span>{session.name}</span>
+                </span>
 
-            {/* Terminal controls */}
-            {session && (
-              <div className="window-no-drag flex items-center gap-1">
-                {!isConnected
-                  ? (
-                      <Button size="sm" onClick={onStartTerminal} className="gap-1.5">
-                        <Play className="h-3.5 w-3.5" />
-                        Start Terminal
-                      </Button>
-                    )
-                  : (
-                      <>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={onRestartTerminal}
-                              className="h-8 w-8"
-                            >
-                              <RotateCw className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Restart terminal</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={onStopTerminal}
-                              className="h-8 w-8"
-                            >
-                              <Square className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Stop terminal</TooltipContent>
-                        </Tooltip>
-                      </>
-                    )}
+                {/* Status Indicator */}
+                <span className={`ml-2 h-1.5 w-1.5 rounded-full ring-1 ring-background ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'}`} />
               </div>
+            )
+            : (
+              <span className="text-[13px] text-muted-foreground/50 italic">
+                No session active
+              </span>
             )}
-          </div>
         </div>
+
+        {/* Controls */}
+        {session && (
+          <div className="window-no-drag flex items-center gap-1">
+            {!isConnected
+              ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={onStartTerminal}
+                  className="h-6 gap-1.5 rounded-sm px-2 text-[11px] font-semibold"
+                >
+                  <Play className="h-3 w-3 fill-current" />
+                  Connect
+                </Button>
+              )
+              : (
+                <div className="flex items-center bg-white/5 rounded-md p-0.5">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onRestartTerminal}
+                        className="h-6 w-6 rounded-sm text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                      >
+                        <RotateCw className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Restart Session</TooltipContent>
+                  </Tooltip>
+                  <div className="mx-0.5 h-3 w-px bg-white/10" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onStopTerminal}
+                        className="h-6 w-6 rounded-sm text-muted-foreground hover:bg-white/10 hover:text-destructive"
+                      >
+                        <Square className="h-3 w-3 fill-current" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Kill Session</TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
+          </div>
+        )}
       </div>
 
-      {/* Terminal content area */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {!session
-          ? (
-              <EmptyTerminalState
-                title="No session selected"
-                description="Select a session from the sidebar to open its terminal"
-              />
-            )
-          : hasError
-            ? (
-                <ErrorTerminalState
-                  message="Failed to connect to terminal. The shell process may have crashed."
-                  onRetry={onStartTerminal}
-                />
-              )
-            : !isConnected
-                ? (
-                    <EmptyTerminalState
-                      title="Terminal not started"
-                      description="Click 'Start Terminal' to begin working in this session"
-                      action={(
-                        <Button size="sm" onClick={onStartTerminal} className="gap-1.5">
-                          <Play className="h-3.5 w-3.5" />
-                          Start Terminal
-                        </Button>
-                      )}
-                    />
-                  )
-                : (
-                    <TerminalContainer session={session} />
-                  )}
+      {/* Terminal Viewport */}
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#1e1e1e]">
+        {!session ? (
+          <EmptyTerminalState />
+        ) : hasError ? (
+          <ErrorTerminalState message="Connection to pty host failed" onRetry={onStartTerminal} />
+        ) : !isConnected ? (
+          <DisconnectedState onConnect={onStartTerminal} />
+        ) : (
+          <TerminalContainer session={session} />
+        )}
       </div>
     </main>
   )
 }
 
-// Empty state component
-interface EmptyTerminalStateProps {
-  title: string
-  description: string
-  action?: React.ReactNode
-}
-
-function EmptyTerminalState({ title, description, action }: EmptyTerminalStateProps) {
+function EmptyTerminalState() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-        <TerminalIcon className="h-8 w-8 text-muted-foreground" />
+    <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground/40">
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 ring-1 ring-white/5">
+        <TerminalIcon className="h-6 w-6" />
       </div>
-      <div className="text-center">
-        <p className="text-sm font-medium text-foreground">{title}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{description}</p>
-      </div>
-      {action}
+      <p className="text-sm font-medium">Select a session to start</p>
     </div>
   )
 }
 
-// Error state component
-interface ErrorTerminalStateProps {
-  message: string
-  onRetry: () => void
-}
-
-function ErrorTerminalState({ message, onRetry }: ErrorTerminalStateProps) {
+function DisconnectedState({ onConnect }: { onConnect: () => void }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/15">
-        <TerminalIcon className="h-8 w-8 text-destructive" />
-      </div>
+    <div className="flex h-full flex-col items-center justify-center gap-4 text-muted-foreground">
       <div className="text-center">
-        <p className="text-sm font-medium text-destructive">Terminal error</p>
-        <p className="mt-1 max-w-sm text-xs text-muted-foreground">{message}</p>
+        <h3 className="text-sm font-medium text-foreground">Session Ready</h3>
+        <p className="text-xs text-muted-foreground/60">Ready to attach to worktree</p>
       </div>
-      <Button variant="outline" size="sm" onClick={onRetry}>
-        Retry
+      <Button onClick={onConnect} className="gap-2">
+        <Play className="h-3.5 w-3.5" />
+        Start Terminal
       </Button>
     </div>
   )
 }
 
-// Terminal container (placeholder for xterm.js)
-interface TerminalContainerProps {
-  session: Session
+function ErrorTerminalState({ message, onRetry }: { message: string, onRetry: () => void }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-4">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+        <TerminalIcon className="h-6 w-6" />
+      </div>
+      <div className="text-center space-y-1">
+        <p className="text-sm font-medium text-destructive">Terminal Error</p>
+        <p className="text-xs text-muted-foreground">{message}</p>
+      </div>
+      <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
+    </div>
+  )
 }
 
-function TerminalContainer({ session }: TerminalContainerProps) {
+function TerminalContainer({ session }: { session: Session }) {
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-background">
-      {/* Tab bar */}
-      <div className="flex h-9 shrink-0 items-center justify-between border-b border-border/60 bg-muted px-3">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 rounded bg-accent px-2 py-1">
-            <TerminalIcon className="h-3 w-3 text-accent-foreground/80" />
-            <span className="text-xs font-medium text-accent-foreground">
-              Terminal
-            </span>
-          </div>
-          <button className="rounded px-1.5 py-1 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
-            +
-          </button>
+    <div className="h-full w-full p-1 pl-2">
+      {/* Mock XTerm */}
+      <div className="h-full w-full font-mono text-[13px] leading-relaxed text-[#cccccc]">
+        <div className="opacity-50 mb-2">
+          Last login: {new Date().toLocaleString()} on ttys001
         </div>
-        <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="text-muted-foreground">Run</span>
-          <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-            ^R
-          </kbd>
+        <div className="flex gap-2">
+          <span className="text-emerald-500 font-bold">➜</span>
+          <span className="text-cyan-500 font-bold">{session.branch.replace('session/', '')}</span>
+          <span className="text-muted-foreground">git:(</span>
+          <span className="text-rose-500">{session.baseBranch}</span>
+          <span className="text-muted-foreground">)</span>
         </div>
-      </div>
-
-      {/* Terminal content placeholder */}
-      <div className="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-3 font-mono text-[13px] leading-relaxed">
-        {/* Simulated terminal prompt */}
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-[color:var(--success)]">
-            {session.branch.replace('session/', '')}
-          </span>
-          <span className="text-muted-foreground">
-            {session.worktreePath.split('/').slice(-2).join('/')}
-          </span>
-        </div>
-        <div className="flex items-center text-foreground/70">
-          <span className="text-[color:var(--accent-blue)]">$</span>
-          <span className="ml-2 animate-pulse text-muted-foreground">_</span>
-        </div>
-
-        {/* Placeholder message */}
-        <div className="mt-4 rounded-md border border-dashed border-border/60 bg-muted/40 p-4 text-center">
-          <p className="text-xs text-muted-foreground">
-            xterm.js terminal will be rendered here
-          </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            This is a placeholder for the terminal UI skeleton
-          </p>
+        <div className="mt-1 flex gap-2">
+          <span className="text-muted-foreground">$</span>
+          <span className="animate-pulse bg-foreground w-1.5 h-4 block translate-y-0.5"></span>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import {
 } from '@renderer/components/ui/collapsible'
 import { Skeleton } from '@renderer/components/ui/skeleton'
 import { ChevronRight, FolderGit2, Plus } from 'lucide-react'
+import { useState } from 'react'
 import { SessionCard } from './SessionCard'
 
 interface WorkspaceGroupProps {
@@ -28,50 +29,41 @@ export function WorkspaceGroup({
   onCreateSession,
   isLoading = false,
 }: WorkspaceGroupProps) {
+  const [isOpen, setIsOpen] = useState(isActive)
   const hasNoSessions = workspace.sessions.length === 0
 
   return (
-    <Collapsible defaultOpen={isActive} className="group/workspace">
+    <Collapsible
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className="group/workspace space-y-1"
+    >
       <CollapsibleTrigger
         onClick={onSelect}
-        className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm font-medium transition-colors hover:bg-accent/50 hover:text-foreground data-[state=open]:text-foreground"
       >
-        <ChevronRight className="h-3 w-3 transition-transform duration-200 group-data-[state=open]/workspace:rotate-90" />
+        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50 transition-transform duration-200 group-data-[state=open]/workspace:rotate-90" />
+        <FolderGit2 className="h-4 w-4 shrink-0 text-muted-foreground group-data-[state=open]/workspace:text-foreground" />
         <span className="flex-1 truncate">{workspace.name}</span>
-        <span className="text-[10px] font-normal normal-case tabular-nums">
+        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
           {workspace.sessions.length}
         </span>
       </CollapsibleTrigger>
 
       <CollapsibleContent>
-        <div className="mt-1 flex flex-col gap-0.5 pl-1">
-          {/* New Session button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation()
-              onCreateSession()
-            }}
-            className="h-7 justify-start gap-1.5 px-2 text-muted-foreground hover:text-foreground"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span className="text-xs">New Session</span>
-          </Button>
-
+        <div className="flex flex-col gap-1 pl-6">
           {/* Loading state */}
           {isLoading && (
-            <>
-              <Skeleton className="ml-2 h-12 w-[calc(100%-8px)]" />
-              <Skeleton className="ml-2 h-12 w-[calc(100%-8px)]" />
-            </>
+            <div className="space-y-2 py-2">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+            </div>
           )}
 
           {/* Empty state */}
           {!isLoading && hasNoSessions && (
-            <div className="flex flex-col items-center gap-2 py-4 text-center">
-              <FolderGit2 className="h-5 w-5 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground">No sessions</p>
+            <div className="py-2 text-xs text-muted-foreground/60 italic">
+              No sessions active
             </div>
           )}
 
@@ -85,6 +77,20 @@ export function WorkspaceGroup({
                 onClick={() => onSessionSelect(session.id)}
               />
             ))}
+
+          {/* Add Session Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              onCreateSession()
+            }}
+            className="h-8 justify-start gap-2 px-3 text-xs text-muted-foreground hover:bg-accent hover:text-primary"
+          >
+            <Plus className="h-3 w-3" />
+            New Session
+          </Button>
         </div>
       </CollapsibleContent>
     </Collapsible>

@@ -1,5 +1,6 @@
 import type { AsyncState, BranchInfo, FileChange } from '../../types'
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
+import { Layers } from 'lucide-react'
 import { BranchInfoCard } from './BranchInfoCard'
 import { ChangesTab } from './ChangesTab'
 
@@ -21,11 +22,16 @@ export function InspectorPanel({
   onRetryBranchInfo,
 }: InspectorPanelProps) {
   return (
-    <aside className="flex h-full w-full flex-col overflow-hidden border-l border-border bg-card text-card-foreground">
-      <div className="group flex h-[52px] shrink-0 items-center justify-between border-b border-border/60 pl-[78px] pr-3 window-drag">
-        <span className="text-[13px] font-medium text-muted-foreground">Changes</span>
+    <aside className="group/inspector flex h-full w-full flex-col overflow-hidden border-l border-border bg-card text-card-foreground">
+      {/* Header */}
+      <div className="flex h-[42px] shrink-0 items-center border-b border-border/40 px-4 window-drag">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Layers className="h-4 w-4" />
+          <span className="text-[13px] font-medium">Inspector</span>
+        </div>
       </div>
-      {/* Changes list */}
+
+      {/* Changes Scroll Area */}
       <ScrollArea className="flex-1">
         <div className="p-3">
           <ChangesTab
@@ -36,7 +42,8 @@ export function InspectorPanel({
         </div>
       </ScrollArea>
 
-      <div className="shrink-0 border-t border-border/60 p-3">
+      {/* Footer / Actions */}
+      <div className="shrink-0 border-t border-border/40 bg-accent/5 p-4 backdrop-blur-sm">
         <BranchInfoCard
           branchInfo={branchInfo}
           onMerge={onMerge}
