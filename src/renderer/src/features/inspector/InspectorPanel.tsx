@@ -1,5 +1,5 @@
+import type { AsyncState, BranchInfo, FileChange } from '../../types'
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
-import type { FileChange, BranchInfo, AsyncState } from '../../types'
 import { BranchInfoCard } from './BranchInfoCard'
 import { ChangesTab } from './ChangesTab'
 
@@ -21,7 +21,7 @@ export function InspectorPanel({
   onRetryBranchInfo,
 }: InspectorPanelProps) {
   return (
-    <aside className="flex h-full w-full flex-col overflow-hidden border-l border-[rgba(255,255,255,0.08)] bg-[#2c2c2e]">
+    <aside className="flex h-full w-full flex-col overflow-hidden border-l border-border bg-card text-card-foreground">
       {/* Changes list */}
       <ScrollArea className="flex-1">
         <div className="p-3">
@@ -34,7 +34,7 @@ export function InspectorPanel({
       </ScrollArea>
 
       {/* Branch info card */}
-      <div className="shrink-0 border-t border-[rgba(255,255,255,0.08)] p-3">
+      <div className="shrink-0 border-t border-border/60 p-3">
         <BranchInfoCard
           branchInfo={branchInfo}
           onMerge={onMerge}

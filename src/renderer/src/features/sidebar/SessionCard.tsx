@@ -1,6 +1,6 @@
-import { Circle, StopCircle, AlertCircle } from 'lucide-react'
-import { Badge } from '@renderer/components/ui/badge'
 import type { Session, SessionStatus } from '../../types'
+import { Badge } from '@renderer/components/ui/badge'
+import { AlertCircle, Circle, StopCircle } from 'lucide-react'
 
 interface SessionCardProps {
   session: Session
@@ -10,22 +10,22 @@ interface SessionCardProps {
 
 const statusConfig: Record<
   SessionStatus,
-  { label: string; icon: React.ReactNode; color: string }
+  { label: string, icon: React.ReactNode, color: string }
 > = {
   running: {
     label: 'Running',
     icon: <Circle className="h-2 w-2 fill-current" />,
-    color: 'text-[#30d158]',
+    color: 'text-[color:var(--success)]',
   },
   stopped: {
     label: 'Stopped',
     icon: <StopCircle className="h-3 w-3" />,
-    color: 'text-[rgba(255,255,255,0.5)]',
+    color: 'text-muted-foreground',
   },
   error: {
     label: 'Error',
     icon: <AlertCircle className="h-3 w-3" />,
-    color: 'text-[#ff453a]',
+    color: 'text-destructive',
   },
 }
 
@@ -37,8 +37,8 @@ export function SessionCard({ session, isActive = false, onClick }: SessionCardP
       onClick={onClick}
       className={`flex w-full items-start justify-between gap-2 rounded-md px-2 py-2 text-left transition-all ${
         isActive
-          ? 'bg-[rgba(10,132,255,0.15)] text-[rgba(255,255,255,0.88)]'
-          : 'text-[rgba(255,255,255,0.7)] hover:bg-[rgba(58,58,60,0.6)]'
+          ? 'bg-accent text-accent-foreground'
+          : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
       }`}
     >
       <div className="flex min-w-0 flex-col gap-1">
@@ -54,8 +54,10 @@ export function SessionCard({ session, isActive = false, onClick }: SessionCardP
           >
             {session.branch.replace('session/', '')}
           </Badge>
-          <span className="text-[11px] text-[rgba(255,255,255,0.35)]">
-            from {session.baseBranch}
+          <span className="text-[11px] text-muted-foreground">
+            from
+            {' '}
+            {session.baseBranch}
           </span>
         </div>
       </div>

@@ -10,11 +10,11 @@
  * - session.delete(sessionId, { removeWorktree, removeBranch })
  */
 
+import type { IpcResult, Session, SessionDeleteOptions } from '../../types'
 import { IpcMethod, IpcService } from 'electron-ipc-decorator'
-import type { Session, SessionDeleteOptions, IpcResult } from '../../types'
-import { storeService } from '../../services/store'
 import { gitService } from '../../services/git'
 import { ptyService } from '../../services/pty'
+import { storeService } from '../../services/store'
 
 /**
  * Session IPC service for managing sessions (worktrees)
@@ -72,7 +72,7 @@ export class SessionService extends IpcService {
       workspace.repoPath,
       worktreePath,
       sessionBranch,
-      baseBranch
+      baseBranch,
     )
     if (!worktreeResult.ok) {
       return { ok: false, error: worktreeResult.error || 'Failed to create worktree' }
@@ -85,7 +85,7 @@ export class SessionService extends IpcService {
       workspaceId,
       branch: sessionBranch,
       worktreePath,
-      status: 'idle'
+      status: 'idle',
     }
 
     return storeService.addSession(session)

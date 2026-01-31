@@ -1,10 +1,10 @@
 import { TooltipProvider } from '@renderer/components/ui/tooltip'
-import './app.css'
-import { AppLayout, PanelLayout } from './layout'
 import { InspectorPanel } from './features/inspector'
 import { Sidebar } from './features/sidebar'
 import { TerminalPanel } from './features/terminal'
+import { AppLayout, PanelLayout } from './layout'
 import { useAppStore } from './store'
+import './app.css'
 
 function App(): React.JSX.Element {
   const {
@@ -33,17 +33,14 @@ function App(): React.JSX.Element {
 
   // Terminal actions (mock for now)
   const handleStartTerminal = () => {
-    console.log('Start terminal for session:', activeSessionId)
     setTerminal({ isConnected: true, status: 'running' })
   }
 
   const handleStopTerminal = () => {
-    console.log('Stop terminal for session:', activeSessionId)
     setTerminal({ isConnected: false, status: 'idle' })
   }
 
   const handleRestartTerminal = () => {
-    console.log('Restart terminal for session:', activeSessionId)
     setTerminal({ isConnected: false, status: 'idle' })
     setTimeout(() => {
       setTerminal({ isConnected: true, status: 'running' })
@@ -52,18 +49,15 @@ function App(): React.JSX.Element {
 
   // Workspace actions (mock for now)
   const handleAddWorkspace = () => {
-    console.log('Add workspace')
     // TODO: Open file dialog via IPC
   }
 
-  const handleCreateSession = (workspaceId: string) => {
-    console.log('Create session for workspace:', workspaceId)
+  const handleCreateSession = () => {
     // TODO: Call IPC to create session
   }
 
   // Merge action (mock for now)
   const handleMerge = () => {
-    console.log('Merge session:', activeSessionId)
     // TODO: Open merge dialog
   }
 
@@ -72,7 +66,7 @@ function App(): React.JSX.Element {
       <AppLayout>
         <PanelLayout
           sidebarCollapsed={sidebarCollapsed}
-          sidebar={
+          sidebar={(
             <Sidebar
               workspaces={workspaces}
               activeWorkspaceId={activeWorkspaceId}
@@ -84,8 +78,8 @@ function App(): React.JSX.Element {
               onToggleCollapse={toggleSidebar}
               onRetry={resetToMockData}
             />
-          }
-          main={
+          )}
+          main={(
             <TerminalPanel
               session={activeSession}
               terminal={terminal}
@@ -95,15 +89,15 @@ function App(): React.JSX.Element {
               onStopTerminal={handleStopTerminal}
               onRestartTerminal={handleRestartTerminal}
             />
-          }
-          inspector={
+          )}
+          inspector={(
             <InspectorPanel
               changes={changes}
               branchInfo={branchInfo}
               onRefreshChanges={refreshChanges}
               onMerge={handleMerge}
             />
-          }
+          )}
         />
       </AppLayout>
     </TooltipProvider>

@@ -1,4 +1,4 @@
-export { InspectorPanel } from './InspectorPanel'
+export { BranchInfoCard } from './BranchInfoCard'
 export { ChangesTab } from './ChangesTab'
 export { FileChangeItem } from './FileChangeItem'
-export { BranchInfoCard } from './BranchInfoCard'
+export { InspectorPanel } from './InspectorPanel'

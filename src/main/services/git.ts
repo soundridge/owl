@@ -6,7 +6,7 @@
  * Real git commands will be implemented in a later phase.
  */
 
-import type { GitStatusEntry, GitMergeResult, IpcResult } from '../types'
+import type { GitMergeResult, GitStatusEntry, IpcResult } from '../types'
 
 /**
  * Git service for executing git commands
@@ -44,7 +44,7 @@ export class GitService {
     repoPath: string,
     worktreePath: string,
     branchName: string,
-    baseBranch: string
+    baseBranch: string,
   ): Promise<IpcResult<void>> {
     if (!repoPath || typeof repoPath !== 'string') {
       return { ok: false, error: 'Invalid repoPath: must be a non-empty string' }
@@ -138,7 +138,7 @@ export class GitService {
   async merge(
     repoPath: string,
     sourceBranch: string,
-    targetBranch: string
+    targetBranch: string,
   ): Promise<IpcResult<GitMergeResult>> {
     if (!repoPath || typeof repoPath !== 'string') {
       return { ok: false, error: 'Invalid repoPath: must be a non-empty string' }
@@ -155,8 +155,8 @@ export class GitService {
       data: {
         success: true,
         conflicted: false,
-        message: `Mock: Successfully merged ${sourceBranch} into ${targetBranch}`
-      }
+        message: `Mock: Successfully merged ${sourceBranch} into ${targetBranch}`,
+      },
     }
   }
 }

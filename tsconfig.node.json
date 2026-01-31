@@ -1,12 +1,12 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
-  "include": ["electron.vite.config.*", "src/main/**/*", "src/preload/**/*"],
   "compilerOptions": {
     "composite": true,
-    "types": ["electron-vite/node"],
-    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
     "emitDecoratorMetadata": true,
-    "skipLibCheck": true,
-    "useDefineForClassFields": false
-  }
+    "experimentalDecorators": true,
+    "types": ["electron-vite/node"],
+    "skipLibCheck": true
+  },
+  "include": ["electron.vite.config.*", "src/main/**/*", "src/preload/**/*"]
 }

@@ -1,4 +1,4 @@
-import type { Workspace, FileChange, BranchInfo } from '../types'
+import type { BranchInfo, FileChange, Workspace } from '../types'
 
 // ============================================
 // Mock Workspaces with Sessions

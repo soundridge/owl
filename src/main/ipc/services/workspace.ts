@@ -8,10 +8,10 @@
  * - workspace.remove(id)
  */
 
+import type { IpcResult, Workspace } from '../../types'
 import { IpcMethod, IpcService } from 'electron-ipc-decorator'
-import type { Workspace, IpcResult } from '../../types'
-import { storeService } from '../../services/store'
 import { gitService } from '../../services/git'
+import { storeService } from '../../services/store'
 
 /**
  * Workspace IPC service for managing workspaces
@@ -54,7 +54,7 @@ export class WorkspaceService extends IpcService {
     const workspace: Workspace = {
       id,
       name,
-      repoPath: path
+      repoPath: path,
     }
 
     return storeService.addWorkspace(workspace)

@@ -7,7 +7,7 @@
  * Persistence file: app.getPath('userData')/workspaces.json
  */
 
-import type { Workspace, Session, IpcResult } from '../types'
+import type { IpcResult, Session, Workspace } from '../types'
 
 /**
  * Store service for managing Workspace and Session data
@@ -108,7 +108,7 @@ export class StoreService {
       return { ok: false, error: 'Invalid workspaceId: must be a non-empty string' }
     }
     const sessions = Array.from(this.sessions.values()).filter(
-      (s) => s.workspaceId === workspaceId
+      s => s.workspaceId === workspaceId,
     )
     return { ok: true, data: sessions }
   }

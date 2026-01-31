@@ -203,19 +203,19 @@ export function PanelLayout({ sidebar, main, inspector }: PanelLayoutProps) {
 ```typescript
 // Workspace - 已注册的 Git 仓库
 interface Workspace {
-  id: string           // UUID
-  name: string         // 显示名称（目录名）
-  repoPath: string     // 仓库绝对路径
+  id: string // UUID
+  name: string // 显示名称（目录名）
+  repoPath: string // 仓库绝对路径
 }
 
 // Session - worktree 工作单元
 interface Session {
-  id: string           // UUID
-  workspaceId: string  // 关联 Workspace
-  name: string         // 显示名称
-  branch: string       // Git 分支名
+  id: string // UUID
+  workspaceId: string // 关联 Workspace
+  name: string // 显示名称
+  branch: string // Git 分支名
   worktreePath: string // Worktree 绝对路径
-  baseBranch: string   // 创建时的基础分支
+  baseBranch: string // 创建时的基础分支
   status: SessionStatus
 }
 
@@ -307,9 +307,9 @@ interface FileChange {
 位置：`src/main/services/store.ts`
 
 ```typescript
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { app } from 'electron'
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { join, dirname } from 'path'
 
 interface StoreData {
   workspaces: Workspace[]
@@ -335,7 +335,8 @@ class StoreService {
 
   private save(): void {
     const dir = dirname(this.filePath)
-    if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+    if (!existsSync(dir))
+      mkdirSync(dir, { recursive: true })
     writeFileSync(this.filePath, JSON.stringify(this.data, null, 2))
   }
 
@@ -352,6 +353,7 @@ class StoreService {
   getSessions(workspaceId: string): Session[] {
     return this.data.sessions.filter(s => s.workspaceId === workspaceId)
   }
+
   addSession(session: Session): void { this.data.sessions.push(session); this.save() }
   updateSession(id: string, updates: Partial<Session>): void {
     const idx = this.data.sessions.findIndex(s => s.id === id)
@@ -360,10 +362,12 @@ class StoreService {
       this.save()
     }
   }
+
   removeSession(id: string): void {
     this.data.sessions = this.data.sessions.filter(s => s.id !== id)
     this.save()
   }
+
   getSession(id: string): Session | undefined {
     return this.data.sessions.find(s => s.id === id)
   }
@@ -383,11 +387,11 @@ export const storeService = new StoreService()
 位置：`src/main/ipc/services/workspace.ts`
 
 ```typescript
-import { IpcService, IpcMethod } from 'electron-ipc-decorator'
-import { storeService } from '../../services/store'
+import { randomUUID } from 'node:crypto'
+import { basename } from 'node:path'
+import { IpcMethod, IpcService } from 'electron-ipc-decorator'
 import { gitService } from '../../services/git'
-import { randomUUID } from 'crypto'
-import { basename } from 'path'
+import { storeService } from '../../services/store'
 
 @IpcService('workspace')
 export class WorkspaceService {
@@ -441,7 +445,8 @@ export class WorkspaceService {
   @IpcMethod()
   async validate(id: string): Promise<IpcResult<boolean>> {
     const ws = storeService.getWorkspaces().find(w => w.id === id)
-    if (!ws) return { ok: true, data: false }
+    if (!ws)
+      return { ok: true, data: false }
     return gitService.isGitRepository(ws.repoPath)
   }
 }
@@ -452,12 +457,12 @@ export class WorkspaceService {
 位置：`src/main/ipc/services/session.ts`
 
 ```typescript
-import { IpcService, IpcMethod } from 'electron-ipc-decorator'
-import { storeService } from '../../services/store'
+import { randomUUID } from 'node:crypto'
+import { join } from 'node:path'
+import { IpcMethod, IpcService } from 'electron-ipc-decorator'
 import { gitService } from '../../services/git'
 import { ptyService } from '../../services/pty'
-import { randomUUID } from 'crypto'
-import { join } from 'path'
+import { storeService } from '../../services/store'
 
 @IpcService('session')
 export class SessionService {
@@ -524,7 +529,7 @@ export class SessionService {
   @IpcMethod()
   async delete(
     sessionId: string,
-    options: { removeWorktree?: boolean; removeBranch?: boolean } = {}
+    options: { removeWorktree?: boolean, removeBranch?: boolean } = {}
   ): Promise<IpcResult<void>> {
     const { removeWorktree = true, removeBranch = true } = options
     const session = storeService.getSession(sessionId)
@@ -564,10 +569,10 @@ export class SessionService {
 位置：`src/main/ipc/services/terminal.ts`
 
 ```typescript
-import { IpcService, IpcMethod } from 'electron-ipc-decorator'
+import { BrowserWindow } from 'electron'
+import { IpcMethod, IpcService } from 'electron-ipc-decorator'
 import { ptyService } from '../../services/pty'
 import { storeService } from '../../services/store'
-import { BrowserWindow } from 'electron'
 
 @IpcService('terminal')
 export class TerminalService {
@@ -623,7 +628,7 @@ export class TerminalService {
 位置：`src/main/ipc/services/git.ts`
 
 ```typescript
-import { IpcService, IpcMethod } from 'electron-ipc-decorator'
+import { IpcMethod, IpcService } from 'electron-ipc-decorator'
 import { gitService } from '../../services/git'
 import { storeService } from '../../services/store'
 
@@ -683,13 +688,13 @@ export class GitIpcService {
 位置：`src/main/services/git.ts`
 
 ```typescript
-import { exec } from 'child_process'
-import { promisify } from 'util'
+import { exec } from 'node:child_process'
+import { promisify } from 'node:util'
 
 const execAsync = promisify(exec)
 
 export class GitService {
-  private async run(cwd: string, cmd: string): Promise<{ stdout: string; stderr: string }> {
+  private async run(cwd: string, cmd: string): Promise<{ stdout: string, stderr: string }> {
     return execAsync(cmd, { cwd, encoding: 'utf-8' })
   }
 
@@ -697,7 +702,8 @@ export class GitService {
     try {
       await this.run(path, 'git rev-parse --is-inside-work-tree')
       return { ok: true, data: true }
-    } catch {
+    }
+    catch {
       return { ok: true, data: false }
     }
   }
@@ -706,7 +712,8 @@ export class GitService {
     try {
       const { stdout } = await this.run(repoPath, 'git symbolic-ref --short HEAD')
       return { ok: true, data: stdout.trim() }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       return { ok: false, error: e.message }
     }
   }
@@ -716,7 +723,8 @@ export class GitService {
       const { stdout } = await this.run(repoPath, 'git branch --list --format="%(refname:short)"')
       const branches = stdout.trim().split('\n').filter(Boolean)
       return { ok: true, data: branches }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       return { ok: false, error: e.message }
     }
   }
@@ -730,7 +738,8 @@ export class GitService {
     try {
       await this.run(repoPath, `git worktree add -b "${branchName}" "${worktreePath}" "${baseBranch}"`)
       return { ok: true }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       return { ok: false, error: e.message }
     }
   }
@@ -739,7 +748,8 @@ export class GitService {
     try {
       await this.run(repoPath, `git worktree remove "${worktreePath}" --force`)
       return { ok: true }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       return { ok: false, error: e.message }
     }
   }
@@ -748,7 +758,8 @@ export class GitService {
     try {
       await this.run(repoPath, `git branch -D "${branchName}"`)
       return { ok: true }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       return { ok: false, error: e.message }
     }
   }
@@ -760,7 +771,7 @@ export class GitService {
         .trim()
         .split('\n')
         .filter(Boolean)
-        .map(line => {
+        .map((line) => {
           const staged = line[0] !== ' ' && line[0] !== '?'
           const statusChar = line[0] === ' ' ? line[1] : line[0]
           const path = line.slice(3)
@@ -778,7 +789,8 @@ export class GitService {
           return { path, status, staged }
         })
       return { ok: true, data: entries }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       return { ok: false, error: e.message }
     }
   }
@@ -787,7 +799,8 @@ export class GitService {
     try {
       const { stdout } = await this.run(repoPath, 'git status --porcelain')
       return { ok: true, data: stdout.trim() === '' }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       return { ok: false, error: e.message }
     }
   }
@@ -825,7 +838,8 @@ export class GitService {
             message: stdout.trim()
           }
         }
-      } catch (mergeError: any) {
+      }
+      catch (mergeError: any) {
         // 检查是否有冲突
         const { stdout: statusOut } = await this.run(repoPath, 'git status --porcelain')
         const conflicts = statusOut
@@ -847,7 +861,8 @@ export class GitService {
 
         throw mergeError
       }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       return { ok: false, error: e.message }
     }
   }
@@ -872,7 +887,8 @@ export class GitService {
           behind: behind || 0
         }
       }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       return { ok: false, error: e.message }
     }
   }
@@ -888,9 +904,9 @@ export const gitService = new GitService()
 位置：`src/main/services/pty.ts`
 
 ```typescript
-import * as pty from 'node-pty'
-import { platform } from 'os'
+import { platform } from 'node:os'
 import { BrowserWindow } from 'electron'
+import * as pty from 'node-pty'
 
 interface PtyInstance {
   pty: pty.IPty
@@ -919,9 +935,9 @@ export class PtyService {
       this.instances.set(ptyId, { pty: ptyProcess, sessionId })
 
       // 转发数据到 Renderer
-      ptyProcess.onData(data => {
+      ptyProcess.onData((data) => {
         const windows = BrowserWindow.getAllWindows()
-        windows.forEach(win => {
+        windows.forEach((win) => {
           win.webContents.send('terminal:data', ptyId, data)
         })
       })
@@ -930,13 +946,14 @@ export class PtyService {
       ptyProcess.onExit(({ exitCode }) => {
         this.instances.delete(ptyId)
         const windows = BrowserWindow.getAllWindows()
-        windows.forEach(win => {
+        windows.forEach((win) => {
           win.webContents.send('terminal:exit', ptyId, exitCode)
         })
       })
 
       return { ok: true, data: ptyId }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       return { ok: false, error: e.message }
     }
   }
@@ -950,7 +967,7 @@ export class PtyService {
     return { ok: true }
   }
 
-  async resize(ptyId: string, params: { cols: number; rows: number }): Promise<IpcResult<void>> {
+  async resize(ptyId: string, params: { cols: number, rows: number }): Promise<IpcResult<void>> {
     const instance = this.instances.get(ptyId)
     if (!instance) {
       return { ok: false, error: 'PTY not found' }
@@ -991,10 +1008,10 @@ export const ptyService = new PtyService()
 位置：`src/renderer/src/features/terminal/XTerm.tsx`
 
 ```tsx
-import { useEffect, useRef, useCallback } from 'react'
-import { Terminal } from 'xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
+import { useCallback, useEffect, useRef } from 'react'
+import { Terminal } from 'xterm'
 import 'xterm/css/xterm.css'
 
 interface XTermProps {
@@ -1009,7 +1026,8 @@ export function XTerm({ ptyId, onReady }: XTermProps) {
 
   // 初始化终端
   useEffect(() => {
-    if (!containerRef.current) return
+    if (!containerRef.current)
+      return
 
     const terminal = new Terminal({
       cursorBlink: true,
@@ -1035,7 +1053,7 @@ export function XTerm({ ptyId, onReady }: XTermProps) {
     fitAddonRef.current = fitAddon
 
     // 处理输入 -> 发送到 Main
-    terminal.onData(data => {
+    terminal.onData((data) => {
       if (ptyId) {
         window.electron.ipcRenderer.invoke('terminal:write', ptyId, data)
       }
@@ -1050,7 +1068,8 @@ export function XTerm({ ptyId, onReady }: XTermProps) {
 
   // 监听 PTY 数据
   useEffect(() => {
-    if (!ptyId) return
+    if (!ptyId)
+      return
 
     const handleData = (_: unknown, id: string, data: string) => {
       if (id === ptyId && terminalRef.current) {
@@ -1104,11 +1123,11 @@ export function XTerm({ ptyId, onReady }: XTermProps) {
 使用现有 shadcn 组件，位置：`src/renderer/src/features/inspector/ChangesTab.tsx`
 
 ```tsx
-import { RefreshCw, GitBranch, FilePlus, FileEdit, FileX, File } from 'lucide-react'
+import type { AsyncState, FileChange } from '@/types'
+import { File, FileEdit, FilePlus, FileX, GitBranch, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import type { FileChange, AsyncState } from '@/types'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface ChangesTabProps {
   changes: AsyncState<FileChange[]>
@@ -1129,7 +1148,9 @@ export function ChangesTab({ changes, onRefresh }: ChangesTabProps) {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border)]">
         <span className="text-sm font-medium">
-          改动文件 ({changes.data?.length || 0})
+          改动文件 (
+          {changes.data?.length || 0}
+          )
         </span>
         <Button
           variant="ghost"
@@ -1143,7 +1164,8 @@ export function ChangesTab({ changes, onRefresh }: ChangesTabProps) {
 
       <ScrollArea className="flex-1">
         {Object.entries(grouped).map(([status, files]) => {
-          if (files.length === 0) return null
+          if (files.length === 0)
+            return null
           const config = statusConfig[status as keyof typeof statusConfig]
           const Icon = config.icon
 
@@ -1151,7 +1173,13 @@ export function ChangesTab({ changes, onRefresh }: ChangesTabProps) {
             <Collapsible key={status} defaultOpen>
               <CollapsibleTrigger className="flex items-center gap-2 px-3 py-1.5 w-full hover:bg-[var(--panel-hover)]">
                 <Icon className={`h-4 w-4 ${config.color}`} />
-                <span className="text-sm">{config.label} ({files.length})</span>
+                <span className="text-sm">
+                  {config.label}
+                  {' '}
+                  (
+                  {files.length}
+                  )
+                </span>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 {files.map(file => (
@@ -1195,17 +1223,17 @@ function groupByStatus(files: FileChange[]) {
 位置：`src/renderer/src/features/inspector/MergeDialog.tsx`
 
 ```tsx
+import { AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/Button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { AlertCircle, CheckCircle2 } from 'lucide-react'
 
 interface MergeDialogProps {
   open: boolean
@@ -1254,76 +1282,85 @@ export function MergeDialog({
           <DialogTitle>合并 Session</DialogTitle>
         </DialogHeader>
 
-        {!result ? (
-          <>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm text-[var(--text-secondary)]">源分支</label>
-                <div className="px-3 py-2 bg-[var(--panel)] rounded-md text-sm">
-                  {sourceBranch}
+        {!result
+          ? (
+              <>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <label className="text-sm text-[var(--text-secondary)]">源分支</label>
+                    <div className="px-3 py-2 bg-[var(--panel)] rounded-md text-sm">
+                      {sourceBranch}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm text-[var(--text-secondary)]">目标分支</label>
+                    <Select value={target} onValueChange={setTarget}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branches.filter(b => b !== sourceBranch).map(branch => (
+                          <SelectItem key={branch} value={branch}>
+                            {branch}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm text-[var(--text-secondary)]">目标分支</label>
-                <Select value={target} onValueChange={setTarget}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {branches.filter(b => b !== sourceBranch).map(branch => (
-                      <SelectItem key={branch} value={branch}>
-                        {branch}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={handleClose}>取消</Button>
+                  <Button onClick={handleMerge} disabled={loading}>
+                    {loading ? '合并中...' : '确认合并'}
+                  </Button>
+                </DialogFooter>
+              </>
+            )
+          : (
+              <>
+                <div className="py-6 text-center">
+                  {result.success
+                    ? (
+                        <>
+                          <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                          <p className="text-lg font-medium mb-2">合并成功</p>
+                          <p className="text-sm text-[var(--text-secondary)]">{result.message}</p>
+                        </>
+                      )
+                    : result.conflicted
+                      ? (
+                          <>
+                            <AlertCircle className="h-12 w-12 mx-auto text-yellow-500 mb-4" />
+                            <p className="text-lg font-medium mb-2">存在冲突</p>
+                            <p className="text-sm text-[var(--text-secondary)] mb-4">
+                              以下文件需要手动解决：
+                            </p>
+                            <ul className="text-sm text-left bg-[var(--panel)] rounded-md p-3">
+                              {result.conflicts?.map(file => (
+                                <li key={file} className="py-1">
+                                  •
+                                  {file}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )
+                      : (
+                          <>
+                            <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+                            <p className="text-lg font-medium mb-2">合并失败</p>
+                            <p className="text-sm text-[var(--text-secondary)]">{result.message}</p>
+                          </>
+                        )}
+                </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={handleClose}>取消</Button>
-              <Button onClick={handleMerge} disabled={loading}>
-                {loading ? '合并中...' : '确认合并'}
-              </Button>
-            </DialogFooter>
-          </>
-        ) : (
-          <>
-            <div className="py-6 text-center">
-              {result.success ? (
-                <>
-                  <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4" />
-                  <p className="text-lg font-medium mb-2">合并成功</p>
-                  <p className="text-sm text-[var(--text-secondary)]">{result.message}</p>
-                </>
-              ) : result.conflicted ? (
-                <>
-                  <AlertCircle className="h-12 w-12 mx-auto text-yellow-500 mb-4" />
-                  <p className="text-lg font-medium mb-2">存在冲突</p>
-                  <p className="text-sm text-[var(--text-secondary)] mb-4">
-                    以下文件需要手动解决：
-                  </p>
-                  <ul className="text-sm text-left bg-[var(--panel)] rounded-md p-3">
-                    {result.conflicts?.map(file => (
-                      <li key={file} className="py-1">• {file}</li>
-                    ))}
-                  </ul>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
-                  <p className="text-lg font-medium mb-2">合并失败</p>
-                  <p className="text-sm text-[var(--text-secondary)]">{result.message}</p>
-                </>
-              )}
-            </div>
-
-            <DialogFooter>
-              <Button onClick={handleClose}>关闭</Button>
-            </DialogFooter>
-          </>
-        )}
+                <DialogFooter>
+                  <Button onClick={handleClose}>关闭</Button>
+                </DialogFooter>
+              </>
+            )}
       </DialogContent>
     </Dialog>
   )
@@ -1346,18 +1383,19 @@ const watchers: Map<string, chokidar.FSWatcher> = new Map()
 
 export function watchSession(sessionId: string, worktreePath: string): void {
   // 已有 watcher 则跳过
-  if (watchers.has(sessionId)) return
+  if (watchers.has(sessionId))
+    return
 
   const notify = debounce(() => {
     const windows = BrowserWindow.getAllWindows()
-    windows.forEach(win => {
+    windows.forEach((win) => {
       win.webContents.send('git:changed', sessionId)
     })
   }, 500)
 
   const watcher = chokidar.watch(worktreePath, {
     ignored: [
-      /(^|[\/\\])\../,  // dotfiles
+      /(^|[/\\])\../, // dotfiles
       '**/node_modules/**',
       '**/.git/**'
     ],
@@ -1385,8 +1423,8 @@ export function unwatchSession(sessionId: string): void {
 位置：`src/preload/index.ts`
 
 ```typescript
-import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge, ipcRenderer } from 'electron'
 
 const api = {
   workspace: {
@@ -1400,7 +1438,7 @@ const api = {
     create: (workspaceId: string, name?: string) =>
       ipcRenderer.invoke('session:create', workspaceId, name),
     rename: (id: string, name: string) => ipcRenderer.invoke('session:rename', id, name),
-    delete: (id: string, options?: { removeWorktree?: boolean; removeBranch?: boolean }) =>
+    delete: (id: string, options?: { removeWorktree?: boolean, removeBranch?: boolean }) =>
       ipcRenderer.invoke('session:delete', id, options),
   },
   terminal: {
@@ -1422,7 +1460,8 @@ const api = {
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('electron', electronAPI)
   contextBridge.exposeInMainWorld('api', api)
-} else {
+}
+else {
   // @ts-ignore
   window.electron = electronAPI
   // @ts-ignore

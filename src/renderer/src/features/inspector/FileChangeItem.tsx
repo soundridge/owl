@@ -1,5 +1,5 @@
-import { FilePlus, FileEdit, FileX, FileText, FileQuestion } from 'lucide-react'
 import type { FileChange, FileChangeStatus } from '../../types'
+import { FileEdit, FilePlus, FileQuestion, FileText, FileX } from 'lucide-react'
 
 interface FileChangeItemProps {
   file: FileChange
@@ -8,31 +8,31 @@ interface FileChangeItemProps {
 
 const statusConfig: Record<
   FileChangeStatus,
-  { icon: React.ReactNode; color: string; label: string }
+  { icon: React.ReactNode, color: string, label: string }
 > = {
   added: {
     icon: <FilePlus className="h-3.5 w-3.5" />,
-    color: 'text-[#30d158]',
+    color: 'text-[color:var(--success)]',
     label: 'Added',
   },
   modified: {
     icon: <FileEdit className="h-3.5 w-3.5" />,
-    color: 'text-[#ff9f0a]',
+    color: 'text-[color:var(--warning)]',
     label: 'Modified',
   },
   deleted: {
     icon: <FileX className="h-3.5 w-3.5" />,
-    color: 'text-[#ff453a]',
+    color: 'text-destructive',
     label: 'Deleted',
   },
   renamed: {
     icon: <FileText className="h-3.5 w-3.5" />,
-    color: 'text-[#bf5af2]',
+    color: 'text-[color:var(--accent-purple)]',
     label: 'Renamed',
   },
   untracked: {
     icon: <FileQuestion className="h-3.5 w-3.5" />,
-    color: 'text-[rgba(255,255,255,0.5)]',
+    color: 'text-muted-foreground',
     label: 'Untracked',
   },
 }
@@ -45,17 +45,17 @@ export function FileChangeItem({ file, onClick }: FileChangeItemProps) {
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-all hover:bg-[rgba(58,58,60,0.6)]"
+      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-all hover:bg-accent"
       title={`${status.label}: ${file.path}`}
     >
       <span className={`shrink-0 ${status.color}`}>{status.icon}</span>
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-xs text-[rgba(255,255,255,0.7)]">
+        <span className="truncate text-xs text-foreground/80">
           {filename}
         </span>
         {directory && (
           <span
-            className="truncate text-[10px] text-[rgba(255,255,255,0.35)]"
+            className="truncate text-[10px] text-muted-foreground"
             title={file.path}
           >
             {directory}
@@ -63,8 +63,18 @@ export function FileChangeItem({ file, onClick }: FileChangeItemProps) {
         )}
       </div>
       <div className="flex shrink-0 items-center gap-1.5 text-[11px] font-medium tabular-nums">
-        {file.added > 0 && <span className="text-[#30d158]">+{file.added}</span>}
-        {file.removed > 0 && <span className="text-[#ff453a]">-{file.removed}</span>}
+        {file.added > 0 && (
+          <span className="text-[color:var(--success)]">
+            +
+            {file.added}
+          </span>
+        )}
+        {file.removed > 0 && (
+          <span className="text-destructive">
+            -
+            {file.removed}
+          </span>
+        )}
       </div>
     </button>
   )

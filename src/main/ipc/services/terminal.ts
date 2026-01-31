@@ -8,8 +8,8 @@
  * - terminal.onData(ptyId) - handled via IPC events
  */
 
+import type { IpcResult, TerminalResizeParams } from '../../types'
 import { IpcMethod, IpcService } from 'electron-ipc-decorator'
-import type { TerminalResizeParams, IpcResult } from '../../types'
 import { ptyService } from '../../services/pty'
 
 /**

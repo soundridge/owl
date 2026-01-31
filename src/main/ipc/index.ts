@@ -1,18 +1,18 @@
 import type { ExtractServiceMethods } from 'electron-ipc-decorator'
 import { createServices } from 'electron-ipc-decorator'
 
-import { SystemService } from './services/system'
-import { WorkspaceService } from './services/workspace'
-import { SessionService } from './services/session'
-import { TerminalService } from './services/terminal'
 import { GitIpcService } from './services/git'
+import { SessionService } from './services/session'
+import { SystemService } from './services/system'
+import { TerminalService } from './services/terminal'
+import { WorkspaceService } from './services/workspace'
 
 const services = createServices([
   SystemService,
   WorkspaceService,
   SessionService,
   TerminalService,
-  GitIpcService
+  GitIpcService,
 ])
 
 // ExtractServiceMethods expects a service instance, so we map over each service
@@ -21,6 +21,5 @@ export type IpcServices = {
 }
 
 export function initializeIpcServices(): void {
-  console.info('IPC services initialized')
   void services
 }

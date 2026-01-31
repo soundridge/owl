@@ -1,9 +1,9 @@
-import { FolderPlus, PanelLeftClose, FolderGit2 } from 'lucide-react'
+import type { AsyncState, Workspace } from '../../types'
 import { Button } from '@renderer/components/ui/button'
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
 import { Skeleton } from '@renderer/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip'
-import type { Workspace, AsyncState } from '../../types'
+import { FolderGit2, FolderPlus, PanelLeftClose } from 'lucide-react'
 import { WorkspaceGroup } from './WorkspaceGroup'
 
 interface SidebarProps {
@@ -33,20 +33,20 @@ export function Sidebar({
   const hasNoWorkspaces = status === 'success' && (!data || data.length === 0)
 
   return (
-    <aside className="flex h-full w-full flex-col overflow-hidden border-r border-[rgba(255,255,255,0.06)] bg-[rgba(30,30,30,0.72)] backdrop-blur-xl">
+    <aside className="flex h-full w-full flex-col overflow-hidden border-r border-border bg-sidebar text-sidebar-foreground backdrop-blur-xl">
       {/* Header - draggable region for window */}
       <div
-        className="group flex h-[52px] shrink-0 items-center justify-between border-b border-[rgba(255,255,255,0.08)] pl-[78px] pr-2"
+        className="group flex h-[52px] shrink-0 items-center justify-between border-b border-border/60 pl-[78px] pr-2"
         style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
       >
-        <span className="text-[13px] font-medium text-[rgba(255,255,255,0.7)]">
+        <span className="text-[13px] font-medium text-muted-foreground">
           Workspaces
         </span>
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               onClick={onToggleCollapse}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-[rgba(255,255,255,0.35)] opacity-0 transition-all hover:bg-[rgba(58,58,60,0.6)] hover:text-[rgba(255,255,255,0.7)] group-hover:opacity-100"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all hover:bg-accent hover:text-accent-foreground group-hover:opacity-100"
               style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
             >
               <PanelLeftClose className="h-4 w-4" />
@@ -71,7 +71,7 @@ export function Sidebar({
           {/* Error state */}
           {status === 'error' && (
             <div className="flex flex-col items-center gap-3 p-4 text-center">
-              <p className="text-sm text-[rgba(255,255,255,0.5)]">
+              <p className="text-sm text-muted-foreground">
                 {error || 'Failed to load workspaces'}
               </p>
               {onRetry && (
@@ -85,14 +85,14 @@ export function Sidebar({
           {/* Empty state */}
           {hasNoWorkspaces && (
             <div className="flex flex-col items-center gap-3 p-6 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(58,58,60,0.6)]">
-                <FolderGit2 className="h-6 w-6 text-[rgba(255,255,255,0.5)]" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <FolderGit2 className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-sm font-medium text-[rgba(255,255,255,0.88)]">
+                <p className="text-sm font-medium text-foreground">
                   No workspaces
                 </p>
-                <p className="mt-1 text-xs text-[rgba(255,255,255,0.5)]">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Add a git repository to get started
                 </p>
               </div>
@@ -104,10 +104,10 @@ export function Sidebar({
           )}
 
           {/* Workspace list */}
-          {status === 'success' &&
-            data &&
-            data.length > 0 &&
-            data.map((workspace) => (
+          {status === 'success'
+            && data
+            && data.length > 0
+            && data.map(workspace => (
               <WorkspaceGroup
                 key={workspace.id}
                 workspace={workspace}
@@ -124,7 +124,7 @@ export function Sidebar({
       </ScrollArea>
 
       {/* Bottom actions */}
-      <div className="flex shrink-0 items-center gap-2 border-t border-[rgba(255,255,255,0.08)] p-3">
+      <div className="flex shrink-0 items-center gap-2 border-t border-border/60 p-3">
         <Button className="flex-1 gap-1.5" onClick={onAddWorkspace}>
           <FolderPlus className="h-4 w-4" />
           Add Workspace

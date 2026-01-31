@@ -6,7 +6,7 @@
  * Real node-pty integration will be implemented in a later phase.
  */
 
-import type { PtySession, IpcResult, TerminalResizeParams } from '../types'
+import type { IpcResult, PtySession, TerminalResizeParams } from '../types'
 
 /**
  * Callback type for PTY data events
@@ -48,7 +48,7 @@ export class PtyService {
     const ptySession: PtySession = {
       ptyId,
       sessionId,
-      pid: Math.floor(Math.random() * 10000) + 1000 // Mock PID
+      pid: Math.floor(Math.random() * 10000) + 1000, // Mock PID
     }
 
     this.ptySessions.set(ptyId, ptySession)

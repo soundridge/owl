@@ -7,10 +7,10 @@
  * - git.merge({ sourceBranch, targetBranch })
  */
 
+import type { GitMergeResult, GitStatusEntry, IpcResult } from '../../types'
 import { IpcMethod, IpcService } from 'electron-ipc-decorator'
-import type { GitStatusEntry, GitMergeResult, IpcResult } from '../../types'
-import { storeService } from '../../services/store'
 import { gitService } from '../../services/git'
+import { storeService } from '../../services/store'
 
 /**
  * Git IPC service for git operations
@@ -79,7 +79,7 @@ export class GitIpcService extends IpcService {
     if (!isCleanResult.data) {
       return {
         ok: false,
-        error: 'Working directory is not clean. Please commit or stash changes before merging.'
+        error: 'Working directory is not clean. Please commit or stash changes before merging.',
       }
     }
 

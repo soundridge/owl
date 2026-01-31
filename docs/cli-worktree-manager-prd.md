@@ -377,10 +377,10 @@ git merge {session-branch}
 
 ```typescript
 interface Workspace {
-  id: string;           // UUID
-  name: string;         // 显示名称（目录名）
-  path: string;         // 仓库绝对路径
-  createdAt: string;    // ISO 时间戳
+  id: string // UUID
+  name: string // 显示名称（目录名）
+  path: string // 仓库绝对路径
+  createdAt: string // ISO 时间戳
 }
 ```
 
@@ -388,14 +388,14 @@ interface Workspace {
 
 ```typescript
 interface Session {
-  id: string;           // UUID
-  workspaceId: string;  // 关联 Workspace
-  name: string;         // 显示名称
-  branchName: string;   // Git 分支名
-  worktreePath: string; // Worktree 绝对路径
-  baseBranch: string;   // 创建时的基础分支
-  status: 'active' | 'closed' | 'error';
-  createdAt: string;
+  id: string // UUID
+  workspaceId: string // 关联 Workspace
+  name: string // 显示名称
+  branchName: string // Git 分支名
+  worktreePath: string // Worktree 绝对路径
+  baseBranch: string // 创建时的基础分支
+  status: 'active' | 'closed' | 'error'
+  createdAt: string
 }
 ```
 
@@ -403,8 +403,8 @@ interface Session {
 
 ```typescript
 interface FileStatus {
-  path: string;
-  status: 'added' | 'modified' | 'deleted' | 'renamed' | 'untracked';
+  path: string
+  status: 'added' | 'modified' | 'deleted' | 'renamed' | 'untracked'
 }
 ```
 
@@ -412,10 +412,10 @@ interface FileStatus {
 
 ```typescript
 interface MergeResult {
-  success: boolean;
-  conflicts?: string[];
-  mergedFiles?: string[];
-  errorMessage?: string;
+  success: boolean
+  conflicts?: string[]
+  mergedFiles?: string[]
+  errorMessage?: string
 }
 ```
 
@@ -423,14 +423,14 @@ interface MergeResult {
 
 ```typescript
 interface StoreSchema {
-  workspaces: Workspace[];
-  sessions: Session[];
+  workspaces: Workspace[]
+  sessions: Session[]
   preferences: {
-    terminalFontSize: number;      // 默认 13
-    terminalFontFamily: string;    // 默认 'SF Mono, Monaco, Consolas, monospace'
-    autoRefreshInterval: number;   // 默认 1000ms
-    confirmBeforeDelete: boolean;  // 默认 true
-  };
+    terminalFontSize: number // 默认 13
+    terminalFontFamily: string // 默认 'SF Mono, Monaco, Consolas, monospace'
+    autoRefreshInterval: number // 默认 1000ms
+    confirmBeforeDelete: boolean // 默认 true
+  }
 }
 ```
 

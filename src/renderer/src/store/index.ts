@@ -1,13 +1,13 @@
-import { create } from 'zustand'
 import type {
-  Workspace,
-  Session,
-  FileChange,
-  BranchInfo,
-  TerminalState,
   AsyncState,
+  BranchInfo,
+  FileChange,
+  Session,
+  TerminalState,
+  Workspace,
 } from '../types'
-import { mockWorkspaces, mockFileChanges, mockBranchInfo } from './mock-data'
+import { create } from 'zustand'
+import { mockBranchInfo, mockFileChanges, mockWorkspaces } from './mock-data'
 
 // ============================================
 // Store State Interface
@@ -68,11 +68,13 @@ interface AppState {
 // Helper Functions
 // ============================================
 
-const createAsyncState = <T>(data: T | null = null): AsyncState<T> => ({
-  data,
-  status: 'idle',
-  error: null,
-})
+function createAsyncState<T>(data: T | null = null): AsyncState<T> {
+  return {
+    data,
+    status: 'idle',
+    error: null,
+  }
+}
 
 const initialTerminalState: TerminalState = {
   sessionId: null,
@@ -100,42 +102,42 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Computed Getters
   getActiveWorkspace: () => {
     const { workspaces, activeWorkspaceId } = get()
-    return workspaces.data?.find((w) => w.id === activeWorkspaceId) ?? null
+    return workspaces.data?.find(w => w.id === activeWorkspaceId) ?? null
   },
 
   getActiveSession: () => {
     const workspace = get().getActiveWorkspace()
     const { activeSessionId } = get()
-    return workspace?.sessions.find((s) => s.id === activeSessionId) ?? null
+    return workspace?.sessions.find(s => s.id === activeSessionId) ?? null
   },
 
   // Workspace Actions
-  setWorkspaces: (workspaces) =>
-    set((state) => ({
+  setWorkspaces: workspaces =>
+    set(state => ({
       workspaces: { ...state.workspaces, data: workspaces, status: 'success' },
     })),
 
   selectWorkspace: (workspaceId) => {
-    const workspace = get().workspaces.data?.find((w) => w.id === workspaceId)
+    const workspace = get().workspaces.data?.find(w => w.id === workspaceId)
     set({
       activeWorkspaceId: workspaceId,
       activeSessionId: workspace?.sessions[0]?.id ?? null,
     })
   },
 
-  addWorkspace: (workspace) =>
-    set((state) => ({
+  addWorkspace: workspace =>
+    set(state => ({
       workspaces: {
         ...state.workspaces,
         data: [...(state.workspaces.data ?? []), workspace],
       },
     })),
 
-  removeWorkspace: (workspaceId) =>
-    set((state) => ({
+  removeWorkspace: workspaceId =>
+    set(state => ({
       workspaces: {
         ...state.workspaces,
-        data: state.workspaces.data?.filter((w) => w.id !== workspaceId) ?? [],
+        data: state.workspaces.data?.filter(w => w.id !== workspaceId) ?? [],
       },
       activeWorkspaceId:
         state.activeWorkspaceId === workspaceId ? null : state.activeWorkspaceId,
@@ -155,45 +157,45 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Simulate loading changes
     get().setChangesLoading(true)
     setTimeout(() => {
-      set((state) => ({
+      set(state => ({
         changes: { ...state.changes, status: 'success' },
       }))
     }, 300)
   },
 
   addSession: (workspaceId, session) =>
-    set((state) => ({
+    set(state => ({
       workspaces: {
         ...state.workspaces,
         data:
-          state.workspaces.data?.map((w) =>
-            w.id === workspaceId ? { ...w, sessions: [...w.sessions, session] } : w
+          state.workspaces.data?.map(w =>
+            w.id === workspaceId ? { ...w, sessions: [...w.sessions, session] } : w,
           ) ?? [],
       },
     })),
 
   updateSession: (sessionId, updates) =>
-    set((state) => ({
+    set(state => ({
       workspaces: {
         ...state.workspaces,
         data:
-          state.workspaces.data?.map((w) => ({
+          state.workspaces.data?.map(w => ({
             ...w,
-            sessions: w.sessions.map((s) =>
-              s.id === sessionId ? { ...s, ...updates } : s
+            sessions: w.sessions.map(s =>
+              s.id === sessionId ? { ...s, ...updates } : s,
             ),
           })) ?? [],
       },
     })),
 
-  removeSession: (sessionId) =>
-    set((state) => ({
+  removeSession: sessionId =>
+    set(state => ({
       workspaces: {
         ...state.workspaces,
         data:
-          state.workspaces.data?.map((w) => ({
+          state.workspaces.data?.map(w => ({
             ...w,
-            sessions: w.sessions.filter((s) => s.id !== sessionId),
+            sessions: w.sessions.filter(s => s.id !== sessionId),
           })) ?? [],
       },
       activeSessionId:
@@ -201,49 +203,49 @@ export const useAppStore = create<AppState>((set, get) => ({
     })),
 
   // Changes Actions
-  setChanges: (changes) =>
-    set((state) => ({
+  setChanges: changes =>
+    set(state => ({
       changes: { ...state.changes, data: changes, status: 'success' },
     })),
 
-  setChangesLoading: (loading) =>
-    set((state) => ({
+  setChangesLoading: loading =>
+    set(state => ({
       changes: { ...state.changes, status: loading ? 'loading' : 'success' },
     })),
 
   refreshChanges: () => {
-    set((state) => ({ changes: { ...state.changes, status: 'loading' } }))
+    set(state => ({ changes: { ...state.changes, status: 'loading' } }))
     setTimeout(() => {
-      set((state) => ({ changes: { ...state.changes, status: 'success' } }))
+      set(state => ({ changes: { ...state.changes, status: 'success' } }))
     }, 500)
   },
 
   // Branch Info Actions
-  setBranchInfo: (branchInfo) =>
-    set((state) => ({
+  setBranchInfo: branchInfo =>
+    set(state => ({
       branchInfo: { ...state.branchInfo, data: branchInfo, status: 'success' },
     })),
 
   // Terminal Actions
-  setTerminal: (terminal) =>
-    set((state) => ({
+  setTerminal: terminal =>
+    set(state => ({
       terminal: { ...state.terminal, ...terminal },
     })),
 
   // UI Actions
   toggleSidebar: () =>
-    set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+    set(state => ({ sidebarCollapsed: !state.sidebarCollapsed })),
 
-  setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+  setSidebarCollapsed: collapsed => set({ sidebarCollapsed: collapsed }),
 
   // Loading State Actions
-  setWorkspacesLoading: (loading) =>
-    set((state) => ({
+  setWorkspacesLoading: loading =>
+    set(state => ({
       workspaces: { ...state.workspaces, status: loading ? 'loading' : 'success' },
     })),
 
-  setWorkspacesError: (error) =>
-    set((state) => ({
+  setWorkspacesError: error =>
+    set(state => ({
       workspaces: { ...state.workspaces, status: error ? 'error' : 'success', error },
     })),
 

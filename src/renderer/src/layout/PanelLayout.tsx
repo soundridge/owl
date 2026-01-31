@@ -19,14 +19,14 @@ export function PanelLayout({
       {!sidebarCollapsed && (
         <>
           <div className="h-full w-[220px] shrink-0">{sidebar}</div>
-          <div className="h-full w-px shrink-0 bg-[rgba(255,255,255,0.08)]" />
+          <div className="h-full w-px shrink-0 bg-border" />
         </>
       )}
 
       {/* Main (Terminal) - flexible */}
       <div className="h-full min-w-0 flex-1">{main}</div>
 
-      <div className="h-full w-px shrink-0 bg-[rgba(255,255,255,0.08)]" />
+      <div className="h-full w-px shrink-0 bg-border" />
 
       {/* Inspector - fixed 220px */}
       <div className="h-full w-[220px] shrink-0">{inspector}</div>
