@@ -20,7 +20,8 @@
       "Bash(npm info:*)",
       "Bash(npm view:*)",
       "Bash(pnpm run typecheck:*)",
-      "Bash(pnpm run typecheck:web:*)"
+      "Bash(pnpm run typecheck:web:*)",
+      "Bash(grep:*)"
     ]
   }
 }

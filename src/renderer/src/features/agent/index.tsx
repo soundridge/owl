@@ -1,3 +1,4 @@
+import type { PromptInputMessage } from '@renderer/components/ai-elements/prompt-input'
 import {
   Message,
   MessageContent,
@@ -6,9 +7,9 @@ import {
 import {
   PromptInput,
   PromptInputFooter,
+
   PromptInputSubmit,
   PromptInputTextarea,
-  type PromptInputMessage,
 } from '@renderer/components/ai-elements/prompt-input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip'
 import { ipcServices } from '@renderer/lib/ipcClient'
@@ -170,7 +171,7 @@ function AgentChat({ sessionId, cwd }: AgentChatProps) {
     <div className="flex h-full flex-col">
       {/* Message list - scrollable, takes remaining space */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl space-y-6 p-4 pb-8">
+        <div className="mx-auto w-[85%] max-w-4xl space-y-6 py-4 pb-8">
           {messages.length === 0 && (
             <div className="flex h-[60vh] flex-col items-center justify-center gap-3 text-muted-foreground/40">
               <MessageSquare className="h-8 w-8" />
@@ -180,7 +181,9 @@ function AgentChat({ sessionId, cwd }: AgentChatProps) {
 
           {messages.map(msg => (
             <Message key={msg.id} from={msg.role}>
-              <MessageContent>
+              <MessageContent
+                className={msg.role === 'user' ? '!rounded-2xl !bg-white/[0.08]' : ''}
+              >
                 {msg.role === 'assistant'
                   ? (
                       <MessageResponse>{msg.content}</MessageResponse>
@@ -207,11 +210,11 @@ function AgentChat({ sessionId, cwd }: AgentChatProps) {
         </div>
       </div>
 
-      {/* Input area - fixed at bottom */}
-      <div className="mx-auto w-full max-w-3xl shrink-0 px-4 pb-4">
+      {/* Input area - fixed at bottom, 80% width centered */}
+      <div className="mx-auto w-[80%] max-w-4xl shrink-0 pb-4">
         <PromptInput
           onSubmit={handleSubmit}
-          className="border-white/10 bg-white/5 transition-colors focus-within:border-white/20 focus-within:bg-white/[0.07] [&:has([data-slot=input-group-control]:focus-visible)]:ring-0"
+          className="rounded-2xl border-white/10 bg-white/5 transition-colors focus-within:border-white/20 focus-within:bg-white/[0.07] [&:has([data-slot=input-group-control]:focus-visible)]:ring-0"
         >
           <PromptInputTextarea
             placeholder="Type your message..."

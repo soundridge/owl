@@ -135,7 +135,7 @@ export function Sidebar() {
   )
 
   return (
-    <aside className="group/sidebar flex h-full w-full flex-col overflow-hidden border-r border-border bg-sidebar text-sidebar-foreground">
+    <aside className="group/sidebar flex h-full w-full flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
       {renderHeader()}
       {renderContent()}
       {renderFooter()}
