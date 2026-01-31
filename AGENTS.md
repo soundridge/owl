@@ -35,7 +35,7 @@ src/
 │   │   └── index.ts
 │   ├── store/
 │   │   ├── index.ts                # 应用状态
-│   │   └── mock-data.ts            # Mock 数据
+│   │   └── mockData.ts             # Mock 数据
 │   │
 │   ├── components/ui/              # ⚠️ shadcn/ui 组件（禁止修改）
 │   │   ├── button.tsx              #   这些是 shadcn/ui 官方组件
@@ -96,3 +96,10 @@ components/ui/ (shadcn/ui，禁止修改)
 **规则**：
 1. **禁止直接修改** - 通过 `npx shadcn@latest add <component>` 安装
 2. **定制样式** - 在使用处用 `className` 覆盖，或在 `features/` 中封装
+
+## 文件命名规范
+
+- 一律使用驼峰命名：如 `mockData.ts`, `ipcClient.ts`, `useMobile.tsx`
+- 目录同样使用驼峰；避免短横线、下划线
+- 第三方生成或约定文件名（如 `components/ui` 内 shadcn 组件、外部配置文件）保留原名
+- 新增文件必须遵循驼峰命名，否则不予合并

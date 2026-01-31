@@ -7,7 +7,7 @@ import type {
   Workspace,
 } from '../types'
 import { create } from 'zustand'
-import { mockBranchInfo, mockFileChanges, mockWorkspaces } from './mock-data'
+import { mockBranchInfo, mockFileChanges, mockWorkspaces } from './mockData'
 
 // ============================================
 // Store State Interface
