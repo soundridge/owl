@@ -13,7 +13,6 @@
 import type { IpcResult, Session, SessionDeleteOptions } from '../../types'
 import { IpcMethod, IpcService } from 'electron-ipc-decorator'
 import { gitService } from '../../services/git'
-import { ptyService } from '../../services/pty'
 import { storeService } from '../../services/store'
 
 /**
@@ -93,11 +92,10 @@ export class SessionService extends IpcService {
 
   /**
    * Open a session
-   * Starts a PTY in the worktree directory
-   * Returns the PTY ID for terminal connection
+   * Marks the session as active
    */
   @IpcMethod()
-  async open(sessionId: string): Promise<IpcResult<string>> {
+  async open(sessionId: string): Promise<IpcResult<void>> {
     // Validate parameter
     if (!sessionId || typeof sessionId !== 'string') {
       return { ok: false, error: 'Invalid sessionId: must be a non-empty string' }
@@ -110,28 +108,16 @@ export class SessionService extends IpcService {
     }
     const session = sessionResult.data
 
-    // Check if PTY already exists
-    const existingPty = await ptyService.getSessionBySessionId(sessionId)
-    if (existingPty.ok && existingPty.data) {
-      return { ok: true, data: existingPty.data.ptyId }
-    }
-
-    // Create PTY
-    const ptyResult = await ptyService.create(sessionId, session.worktreePath)
-    if (!ptyResult.ok) {
-      return { ok: false, error: ptyResult.error || 'Failed to create PTY' }
-    }
-
     // Update session status
     session.status = 'running'
     await storeService.updateSession(session)
 
-    return { ok: true, data: ptyResult.data }
+    return { ok: true }
   }
 
   /**
    * Close a session
-   * Terminates the PTY but keeps the worktree
+   * Marks the session as idle
    */
   @IpcMethod()
   async close(sessionId: string): Promise<IpcResult<void>> {
@@ -146,12 +132,6 @@ export class SessionService extends IpcService {
       return { ok: false, error: sessionResult.error || `Session '${sessionId}' not found` }
     }
     const session = sessionResult.data
-
-    // Destroy PTY if exists
-    const ptyResult = await ptyService.getSessionBySessionId(sessionId)
-    if (ptyResult.ok && ptyResult.data) {
-      await ptyService.destroy(ptyResult.data.ptyId)
-    }
 
     // Update session status
     session.status = 'idle'
@@ -186,12 +166,6 @@ export class SessionService extends IpcService {
       return { ok: false, error: workspaceResult.error || `Workspace '${session.workspaceId}' not found` }
     }
     const workspace = workspaceResult.data
-
-    // Close PTY if running
-    const ptyResult = await ptyService.getSessionBySessionId(sessionId)
-    if (ptyResult.ok && ptyResult.data) {
-      await ptyService.destroy(ptyResult.data.ptyId)
-    }
 
     // Remove worktree if requested
     if (opts.removeWorktree) {

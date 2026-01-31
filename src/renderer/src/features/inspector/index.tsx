@@ -1,26 +1,30 @@
-import type { AsyncState, BranchInfo, FileChange } from '../../types'
+import { useEffect } from 'react'
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
 import { Layers } from 'lucide-react'
+import { useChangesStore, useSessionStore } from '@renderer/store'
 import { BranchInfoCard } from './BranchInfoCard'
 import { ChangesTab } from './ChangesTab'
 
-interface InspectorPanelProps {
-  changes: AsyncState<FileChange[]>
-  branchInfo: AsyncState<BranchInfo>
-  onFileClick?: (path: string) => void
-  onRefreshChanges: () => void
-  onMerge: () => void
-  onRetryBranchInfo?: () => void
-}
+export function InspectorPanel() {
+  const { changes, branchInfo, refreshChanges, fetchChanges, fetchBranchInfo } = useChangesStore()
+  const activeSession = useSessionStore(state => state.getActiveSession())
 
-export function InspectorPanel({
-  changes,
-  branchInfo,
-  onFileClick,
-  onRefreshChanges,
-  onMerge,
-  onRetryBranchInfo,
-}: InspectorPanelProps) {
+  // Fetch changes when session changes
+  useEffect(() => {
+    if (activeSession?.worktreePath) {
+      fetchChanges(activeSession.worktreePath)
+      fetchBranchInfo(activeSession.worktreePath)
+    }
+  }, [activeSession?.id, activeSession?.worktreePath, fetchChanges, fetchBranchInfo])
+
+  const handleMerge = () => {
+    // TODO: Open merge dialog
+  }
+
+  const handleFileClick = (_path: string) => {
+    // TODO: Open file in editor or diff view
+  }
+
   return (
     <aside className="group/inspector flex h-full w-full flex-col overflow-hidden border-l border-border bg-card text-card-foreground">
       {/* Header */}
@@ -36,8 +40,8 @@ export function InspectorPanel({
         <div className="p-3">
           <ChangesTab
             changes={changes}
-            onFileClick={onFileClick}
-            onRefresh={onRefreshChanges}
+            onFileClick={handleFileClick}
+            onRefresh={refreshChanges}
           />
         </div>
       </ScrollArea>
@@ -46,10 +50,13 @@ export function InspectorPanel({
       <div className="shrink-0 border-t border-border/40 bg-accent/5 p-4 backdrop-blur-sm">
         <BranchInfoCard
           branchInfo={branchInfo}
-          onMerge={onMerge}
-          onRetry={onRetryBranchInfo}
+          onMerge={handleMerge}
         />
       </div>
     </aside>
   )
 }
+
+export { BranchInfoCard } from './BranchInfoCard'
+export { ChangesTab } from './ChangesTab'
+export { FileChangeItem } from './FileChangeItem'

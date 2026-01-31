@@ -1,37 +1,50 @@
 import type { ReactNode } from 'react'
-import type { AsyncState, Workspace } from '../../types'
+import { useEffect } from 'react'
 import { Button } from '@renderer/components/ui/button'
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
 import { Skeleton } from '@renderer/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip'
 import { FolderGit2, PanelLeftClose, Plus } from 'lucide-react'
+import { ipcServices } from '@renderer/lib/ipcClient'
+import { useSessionStore, useUIStore, useWorkspaceStore } from '@renderer/store'
 import { WorkspaceGroup } from './WorkspaceGroup'
 
-interface SidebarProps {
-  workspaces: AsyncState<Workspace[]>
-  activeWorkspaceId: string | null
-  activeSessionId: string | null
-  onWorkspaceSelect: (workspaceId: string) => void
-  onSessionSelect: (sessionId: string) => void
-  onAddWorkspace: () => void
-  onCreateSession: (workspaceId: string) => void
-  onToggleCollapse: () => void
-  onRetry?: () => void
-}
+export function Sidebar() {
+  const { workspaces, activeWorkspaceId, fetchWorkspaces, selectWorkspace, addWorkspace } = useWorkspaceStore()
+  const { activeSessionId, selectSession, createSession } = useSessionStore()
+  const { toggleSidebar } = useUIStore()
 
-export function Sidebar({
-  workspaces,
-  activeWorkspaceId,
-  activeSessionId,
-  onWorkspaceSelect,
-  onSessionSelect,
-  onAddWorkspace,
-  onCreateSession,
-  onToggleCollapse,
-  onRetry,
-}: SidebarProps) {
   const { data, status, error } = workspaces
   const hasNoWorkspaces = status === 'success' && (!data || data.length === 0)
+
+  // Fetch workspaces on mount
+  useEffect(() => {
+    fetchWorkspaces()
+  }, [fetchWorkspaces])
+
+  const handleAddWorkspace = async () => {
+    if (!ipcServices) {
+      console.error('IPC services not available')
+      return
+    }
+
+    const dialogResult = await ipcServices.system.showOpenFolderDialog()
+    if (!dialogResult.ok || !dialogResult.data) {
+      return
+    }
+
+    const result = await addWorkspace(dialogResult.data)
+    if (!result.ok) {
+      console.error('Failed to add workspace:', result.error)
+    }
+  }
+
+  const handleCreateSession = async (workspaceId: string) => {
+    const result = await createSession(workspaceId)
+    if (!result.ok) {
+      console.error('Failed to create session:', result.error)
+    }
+  }
 
   const renderHeader = (): ReactNode => (
     <div className="flex h-13 shrink-0 items-center justify-end border-b border-border px-4">
@@ -40,7 +53,7 @@ export function Sidebar({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onToggleCollapse}
+            onClick={toggleSidebar}
             className="-mr-2 h-8 w-8 text-muted-foreground hover:text-foreground"
           >
             <PanelLeftClose className="h-4 w-4" />
@@ -62,11 +75,9 @@ export function Sidebar({
   const renderErrorState = (): ReactNode => (
     <div className="flex flex-col items-center gap-2 p-4 text-center">
       <p className="text-sm text-destructive">{error || 'Failed to load'}</p>
-      {onRetry && (
-        <Button variant="outline" size="sm" onClick={onRetry}>
-          Retry
-        </Button>
-      )}
+      <Button variant="outline" size="sm" onClick={fetchWorkspaces}>
+        Retry
+      </Button>
     </div>
   )
 
@@ -76,7 +87,7 @@ export function Sidebar({
         <FolderGit2 className="h-6 w-6 text-muted-foreground" />
       </div>
       <p className="text-sm font-medium text-foreground">No workspaces found</p>
-      <Button size="sm" onClick={onAddWorkspace}>
+      <Button size="sm" onClick={handleAddWorkspace}>
         Add your first repo
       </Button>
     </div>
@@ -92,9 +103,9 @@ export function Sidebar({
         workspace={workspace}
         isActive={workspace.id === activeWorkspaceId}
         activeSessionId={activeWorkspaceId === workspace.id ? activeSessionId : null}
-        onSelect={() => onWorkspaceSelect(workspace.id)}
-        onSessionSelect={onSessionSelect}
-        onCreateSession={() => onCreateSession(workspace.id)}
+        onSelect={() => selectWorkspace(workspace.id)}
+        onSessionSelect={selectSession}
+        onCreateSession={() => handleCreateSession(workspace.id)}
       />
     ))
   }
@@ -115,7 +126,7 @@ export function Sidebar({
       <Button
         variant="outline"
         className="w-full justify-start gap-2"
-        onClick={onAddWorkspace}
+        onClick={handleAddWorkspace}
       >
         <Plus className="h-4 w-4" />
         Add Workspace
@@ -131,3 +142,6 @@ export function Sidebar({
     </aside>
   )
 }
+
+export { SessionCard } from './SessionCard'
+export { WorkspaceGroup } from './WorkspaceGroup'

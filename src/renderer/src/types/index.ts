@@ -38,17 +38,6 @@ export interface FileChange {
 export type FileChangeStatus = 'added' | 'modified' | 'deleted' | 'renamed' | 'untracked'
 
 // ============================================
-// Terminal Types
-// ============================================
-
-export interface TerminalState {
-  sessionId: string | null
-  ptyId: string | null
-  isConnected: boolean
-  status: 'idle' | 'running' | 'error'
-}
-
-// ============================================
 // UI State Types
 // ============================================
 

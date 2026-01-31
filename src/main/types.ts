@@ -65,18 +65,16 @@ export interface SessionDeleteOptions {
 }
 
 /**
- * Terminal resize parameters
+ * Agent session status
  */
-export interface TerminalResizeParams {
-  cols: number
-  rows: number
-}
+export type AgentStatus = 'idle' | 'running' | 'error'
 
 /**
- * Runtime state for active PTY sessions (in-memory only)
+ * Runtime state for active agent sessions (in-memory only)
  */
-export interface PtySession {
-  ptyId: string
-  sessionId: string
-  pid: number
+export interface AgentSession {
+  id: string
+  cwd: string
+  cliSessionId: string | null // codex's thread_id, used for resume
+  status: AgentStatus
 }
