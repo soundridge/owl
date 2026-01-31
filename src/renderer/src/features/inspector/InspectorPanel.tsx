@@ -22,6 +22,9 @@ export function InspectorPanel({
 }: InspectorPanelProps) {
   return (
     <aside className="flex h-full w-full flex-col overflow-hidden border-l border-border bg-card text-card-foreground">
+      <div className="group flex h-[52px] shrink-0 items-center justify-between border-b border-border/60 pl-[78px] pr-3 window-drag">
+        <span className="text-[13px] font-medium text-muted-foreground">Changes</span>
+      </div>
       {/* Changes list */}
       <ScrollArea className="flex-1">
         <div className="p-3">
@@ -33,7 +36,6 @@ export function InspectorPanel({
         </div>
       </ScrollArea>
 
-      {/* Branch info card */}
       <div className="shrink-0 border-t border-border/60 p-3">
         <BranchInfoCard
           branchInfo={branchInfo}

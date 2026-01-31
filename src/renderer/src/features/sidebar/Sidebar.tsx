@@ -46,7 +46,7 @@ export function Sidebar({
           <TooltipTrigger asChild>
             <button
               onClick={onToggleCollapse}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all hover:bg-accent hover:text-accent-foreground group-hover:opacity-100"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground"
               style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
             >
               <PanelLeftClose className="h-4 w-4" />

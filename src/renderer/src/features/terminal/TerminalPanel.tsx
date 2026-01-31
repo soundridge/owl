@@ -36,19 +36,15 @@ export function TerminalPanel({
     <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-card text-card-foreground">
       {/* Header */}
       <div className="shrink-0 border-b border-border/60">
-        <div className="flex items-center">
+        <div className="flex items-center window-drag">
           {/* Sidebar toggle when collapsed */}
           {sidebarCollapsed && (
-            <div
-              className="flex h-[52px] items-center border-r border-border/60 pl-[78px] pr-2"
-              style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
-            >
+            <div className="flex h-[52px] items-center border-r border-border/60 pl-[78px] pr-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     onClick={onToggleSidebar}
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground"
-                    style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+                    className="window-no-drag flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground"
                   >
                     <PanelLeft className="h-4 w-4" />
                   </button>
@@ -59,7 +55,7 @@ export function TerminalPanel({
           )}
 
           {/* Session header */}
-          <div className="flex flex-1 items-center justify-between px-4 py-3">
+          <div className="flex h-[52px] flex-1 items-center justify-between px-4">
             <div className="flex flex-col gap-0.5">
               {session
                 ? (
@@ -95,7 +91,7 @@ export function TerminalPanel({
 
             {/* Terminal controls */}
             {session && (
-              <div className="flex items-center gap-1">
+              <div className="window-no-drag flex items-center gap-1">
                 {!isConnected
                   ? (
                       <Button size="sm" onClick={onStartTerminal} className="gap-1.5">
