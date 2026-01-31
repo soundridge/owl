@@ -7,7 +7,8 @@ import type {
   Workspace,
 } from '../types'
 import { create } from 'zustand'
-import { mockBranchInfo, mockFileChanges, mockWorkspaces } from './mockData'
+import { ipcServices } from '../lib/ipc-client'
+import { mockBranchInfo, mockFileChanges } from './mockData'
 
 // ============================================
 // Store State Interface
@@ -29,7 +30,11 @@ interface AppState {
   getActiveWorkspace: () => Workspace | null
   getActiveSession: () => Session | null
 
-  // Actions - Workspace
+  // Actions - Workspace (IPC)
+  fetchWorkspaces: () => Promise<void>
+  addWorkspaceFromPath: (path: string) => Promise<{ ok: boolean, error?: string }>
+
+  // Actions - Workspace (Local)
   setWorkspaces: (workspaces: Workspace[]) => void
   selectWorkspace: (workspaceId: string) => void
   addWorkspace: (workspace: Workspace) => void
@@ -59,19 +64,16 @@ interface AppState {
   // Actions - Loading States
   setWorkspacesLoading: (loading: boolean) => void
   setWorkspacesError: (error: string | null) => void
-
-  // Demo helpers
-  resetToMockData: () => void
 }
 
 // ============================================
 // Helper Functions
 // ============================================
 
-function createAsyncState<T>(data: T | null = null): AsyncState<T> {
+function createAsyncState<T>(data: T | null = null, status: 'idle' | 'loading' | 'success' | 'error' = 'idle'): AsyncState<T> {
   return {
     data,
-    status: 'idle',
+    status,
     error: null,
   }
 }
@@ -88,15 +90,15 @@ const initialTerminalState: TerminalState = {
 // ============================================
 
 export const useAppStore = create<AppState>((set, get) => ({
-  // Initial Data
-  workspaces: createAsyncState(mockWorkspaces),
+  // Initial Data - start with empty workspaces, will be loaded from IPC
+  workspaces: createAsyncState<Workspace[]>([], 'idle'),
   changes: createAsyncState(mockFileChanges),
   branchInfo: createAsyncState(mockBranchInfo),
   terminal: initialTerminalState,
 
   // Initial UI State
-  activeWorkspaceId: mockWorkspaces[0]?.id ?? null,
-  activeSessionId: mockWorkspaces[0]?.sessions[0]?.id ?? null,
+  activeWorkspaceId: null,
+  activeSessionId: null,
   sidebarCollapsed: false,
 
   // Computed Getters
@@ -111,7 +113,77 @@ export const useAppStore = create<AppState>((set, get) => ({
     return workspace?.sessions.find(s => s.id === activeSessionId) ?? null
   },
 
-  // Workspace Actions
+  // Workspace Actions (IPC)
+  fetchWorkspaces: async () => {
+    if (!ipcServices) {
+      set(state => ({
+        workspaces: { ...state.workspaces, status: 'error', error: 'IPC not available' },
+      }))
+      return
+    }
+
+    set(state => ({
+      workspaces: { ...state.workspaces, status: 'loading' },
+    }))
+
+    try {
+      const result = await ipcServices.workspace.list()
+      if (result.ok && result.data) {
+        // Transform main process Workspace to renderer Workspace (add empty sessions array)
+        const workspaces: Workspace[] = result.data.map(ws => ({
+          ...ws,
+          sessions: [],
+        }))
+        set(state => ({
+          workspaces: { ...state.workspaces, data: workspaces, status: 'success' },
+          activeWorkspaceId: state.activeWorkspaceId ?? workspaces[0]?.id ?? null,
+        }))
+      }
+      else {
+        set(state => ({
+          workspaces: { ...state.workspaces, status: 'error', error: result.error || 'Failed to fetch workspaces' },
+        }))
+      }
+    }
+    catch (error) {
+      set(state => ({
+        workspaces: { ...state.workspaces, status: 'error', error: String(error) },
+      }))
+    }
+  },
+
+  addWorkspaceFromPath: async (path: string) => {
+    if (!ipcServices) {
+      return { ok: false, error: 'IPC not available' }
+    }
+
+    try {
+      const result = await ipcServices.workspace.add(path)
+      if (result.ok && result.data) {
+        // Add to local state with empty sessions
+        const workspace: Workspace = {
+          ...result.data,
+          sessions: [],
+        }
+        set(state => ({
+          workspaces: {
+            ...state.workspaces,
+            data: [...(state.workspaces.data ?? []), workspace],
+          },
+          activeWorkspaceId: workspace.id,
+        }))
+        return { ok: true }
+      }
+      else {
+        return { ok: false, error: result.error || 'Failed to add workspace' }
+      }
+    }
+    catch (error) {
+      return { ok: false, error: String(error) }
+    }
+  },
+
+  // Workspace Actions (Local)
   setWorkspaces: workspaces =>
     set(state => ({
       workspaces: { ...state.workspaces, data: workspaces, status: 'success' },
@@ -248,20 +320,4 @@ export const useAppStore = create<AppState>((set, get) => ({
     set(state => ({
       workspaces: { ...state.workspaces, status: error ? 'error' : 'success', error },
     })),
-
-  // Demo helpers
-  resetToMockData: () =>
-    set({
-      workspaces: createAsyncState(mockWorkspaces),
-      changes: createAsyncState(mockFileChanges),
-      branchInfo: createAsyncState(mockBranchInfo),
-      activeWorkspaceId: mockWorkspaces[0]?.id ?? null,
-      activeSessionId: mockWorkspaces[0]?.sessions[0]?.id ?? null,
-      terminal: {
-        sessionId: mockWorkspaces[0]?.sessions[0]?.id ?? null,
-        ptyId: null,
-        isConnected: true,
-        status: 'running',
-      },
-    }),
 }))

@@ -10,6 +10,7 @@ import {
   Square,
   Terminal as TerminalIcon,
 } from 'lucide-react'
+import { XTerm } from './XTerm'
 
 interface TerminalPanelProps {
   session: Session | null
@@ -115,7 +116,7 @@ export function TerminalPanel({
       </div>
 
       {/* Terminal Viewport */}
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#1e1e1e]">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#1c1c1e]">
         {!session
           ? (
               <EmptyTerminalState />
@@ -129,7 +130,7 @@ export function TerminalPanel({
                     <DisconnectedState onConnect={onStartTerminal} />
                   )
                 : (
-                    <TerminalContainer session={session} />
+                    <XTerm ptyId={terminal.ptyId} />
                   )}
       </div>
     </main>
@@ -173,34 +174,6 @@ function ErrorTerminalState({ message, onRetry }: { message: string, onRetry: ()
         <p className="text-xs text-muted-foreground">{message}</p>
       </div>
       <Button variant="outline" size="sm" onClick={onRetry}>Retry</Button>
-    </div>
-  )
-}
-
-function TerminalContainer({ session }: { session: Session }) {
-  return (
-    <div className="h-full w-full p-1 pl-2">
-      {/* Mock XTerm */}
-      <div className="h-full w-full font-mono text-[13px] leading-relaxed text-[#cccccc]">
-        <div className="opacity-50 mb-2">
-          Last login:
-          {' '}
-          {new Date().toLocaleString()}
-          {' '}
-          on ttys001
-        </div>
-        <div className="flex gap-2">
-          <span className="text-emerald-500 font-bold">➜</span>
-          <span className="text-cyan-500 font-bold">{session.branch.replace('session/', '')}</span>
-          <span className="text-muted-foreground">git:(</span>
-          <span className="text-rose-500">{session.baseBranch}</span>
-          <span className="text-muted-foreground">)</span>
-        </div>
-        <div className="mt-1 flex gap-2">
-          <span className="text-muted-foreground">$</span>
-          <span className="animate-pulse bg-foreground w-1.5 h-4 block translate-y-0.5"></span>
-        </div>
-      </div>
     </div>
   )
 }

@@ -2,20 +2,77 @@
  * Store service - Manages persistence for Workspace and Session data
  * Based on: docs/cli-worktree-manager-tech.md Section 6
  *
- * Note: This is a skeleton implementation using in-memory storage.
- * Real file persistence will be implemented in a later phase.
  * Persistence file: app.getPath('userData')/workspaces.json
  */
 
 import type { IpcResult, Session, Workspace } from '../types'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import { app } from 'electron'
+
+interface StoreData {
+  workspaces: Workspace[]
+  sessions: Session[]
+}
 
 /**
  * Store service for managing Workspace and Session data
  */
 export class StoreService {
-  // In-memory storage (mock persistence)
+  // In-memory storage
   private workspaces: Map<string, Workspace> = new Map()
   private sessions: Map<string, Session> = new Map()
+
+  // File persistence path
+  private storagePath: string
+
+  constructor() {
+    this.storagePath = path.join(app.getPath('userData'), 'workspaces.json')
+    this.loadFromDisk()
+  }
+
+  // ============ Persistence Methods ============
+
+  /**
+   * Load data from disk
+   */
+  private loadFromDisk(): void {
+    try {
+      if (fs.existsSync(this.storagePath)) {
+        const raw = fs.readFileSync(this.storagePath, 'utf-8')
+        const data: StoreData = JSON.parse(raw)
+
+        this.workspaces.clear()
+        this.sessions.clear()
+
+        for (const workspace of data.workspaces || []) {
+          this.workspaces.set(workspace.id, workspace)
+        }
+        for (const session of data.sessions || []) {
+          this.sessions.set(session.id, session)
+        }
+      }
+    }
+    catch (error) {
+      console.error('Failed to load store from disk:', error)
+    }
+  }
+
+  /**
+   * Save data to disk
+   */
+  private saveToDisk(): void {
+    try {
+      const data: StoreData = {
+        workspaces: Array.from(this.workspaces.values()),
+        sessions: Array.from(this.sessions.values()),
+      }
+      fs.writeFileSync(this.storagePath, JSON.stringify(data, null, 2), 'utf-8')
+    }
+    catch (error) {
+      console.error('Failed to save store to disk:', error)
+    }
+  }
 
   // ============ Workspace Methods ============
 
@@ -57,7 +114,16 @@ export class StoreService {
     if (this.workspaces.has(workspace.id)) {
       return { ok: false, error: `Workspace with id '${workspace.id}' already exists` }
     }
+
+    // Check if workspace with same repoPath already exists
+    for (const existing of this.workspaces.values()) {
+      if (existing.repoPath === workspace.repoPath) {
+        return { ok: false, error: 'A workspace with this repository path already exists' }
+      }
+    }
+
     this.workspaces.set(workspace.id, workspace)
+    this.saveToDisk()
     return { ok: true, data: workspace }
   }
 
@@ -75,6 +141,7 @@ export class StoreService {
       return { ok: false, error: `Workspace with id '${workspace.id}' not found` }
     }
     this.workspaces.set(workspace.id, workspace)
+    this.saveToDisk()
     return { ok: true, data: workspace }
   }
 
@@ -95,6 +162,7 @@ export class StoreService {
         this.sessions.delete(sessionId)
       }
     }
+    this.saveToDisk()
     return { ok: true }
   }
 
@@ -150,6 +218,7 @@ export class StoreService {
       return { ok: false, error: `Session with id '${session.id}' already exists` }
     }
     this.sessions.set(session.id, session)
+    this.saveToDisk()
     return { ok: true, data: session }
   }
 
@@ -167,6 +236,7 @@ export class StoreService {
       return { ok: false, error: `Session with id '${session.id}' not found` }
     }
     this.sessions.set(session.id, session)
+    this.saveToDisk()
     return { ok: true, data: session }
   }
 
@@ -181,6 +251,7 @@ export class StoreService {
       return { ok: false, error: `Session with id '${id}' not found` }
     }
     this.sessions.delete(id)
+    this.saveToDisk()
     return { ok: true }
   }
 }

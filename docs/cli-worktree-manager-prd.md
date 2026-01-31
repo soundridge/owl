@@ -1,21 +1,90 @@
 # CLI Worktree 管理器 - 产品需求文档
 
-**版本**：2.0
-**日期**：2026-01-30
+**版本**：3.0
+**日期**：2026-01-31
 
 ---
 
 ## 概述
 
-一款 Electron 桌面应用，为每个 CLI 编程代理（codex、claude code 等）创建独立的 git worktree，避免多代理并行时的文件冲突。
+一款 Electron 桌面应用，为 CLI 编程代理（Codex、Claude Code 等）提供友好的 GUI 界面。核心理念是**最大程度复用现有 CLI 能力**，应用本身只是一个"多开 CLI 的壳子"。
 
-**核心功能**：
-- 管理 Workspace（git 仓库）
-- 管理 Session（worktree + 终端）
-- 显示 Session 改动文件列表
-- 合并 Session 到目标分支
+**核心价值**：
+- 用户无需在终端中操作复杂的 CLI 命令
+- 支持多个 AI Agent 并行工作，每个在独立的 git worktree 中
+- 可视化展示文件改动、分支状态
+- 一键合并 Agent 的工作成果
 
 **技术栈**：Electron + React + TypeScript + xterm.js + node-pty
+
+---
+
+## 核心架构
+
+### CLI Agent 集成方式
+
+应用通过 `spawn` 调用已安装的 CLI 工具，**不处理认证逻辑**。用户需要自行在终端完成登录：
+
+```bash
+# 用户自行完成认证
+codex login
+claude login
+```
+
+应用复用 CLI 已保存的凭证，支持多轮对话：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Electron Main Process                     │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │                   CLI Agent Manager                    │   │
+│  │                                                        │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │   │
+│  │  │ CodexAgent  │  │ ClaudeAgent │  │  ...Agent   │   │   │
+│  │  │             │  │             │  │             │   │   │
+│  │  │ sessionId   │  │ sessionId   │  │ sessionId   │   │   │
+│  │  │ cwd         │  │ cwd         │  │ cwd         │   │   │
+│  │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘   │   │
+│  │         │                │                │          │   │
+│  │         ▼                ▼                ▼          │   │
+│  │     spawn            spawn            spawn          │   │
+│  │   "codex exec"    "claude ..."      "xxx ..."       │   │
+│  │                                                        │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### 多轮对话机制
+
+**Codex**：使用 `exec --json` + `resume` 实现会话保持
+
+```bash
+# 首轮对话
+codex exec --json "分析项目结构"
+# 输出包含 thread_id
+
+# 后续对话 - 使用 resume 继续
+codex exec resume <SESSION_ID> --json "根据分析结果进行优化"
+```
+
+**Claude Code**：类似机制（待确认具体命令）
+
+```bash
+claude --print --output-format json "分析项目"
+```
+
+### 输出解析
+
+CLI 输出 JSONL 格式，应用解析事件流：
+
+```jsonl
+{"type":"thread.started","thread_id":"abc123"}
+{"type":"item.started","item":{"type":"command_execution","command":"ls"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"分析完成..."}}
+{"type":"turn.completed","usage":{"input_tokens":1000,"output_tokens":200}}
+```
 
 ---
 
@@ -114,11 +183,11 @@ Worktree 目录处理：
 **触发方式**：点击 Session 列表项
 
 **操作**：
-1. 在终端区域启动 shell，工作目录为 worktree 路径
+1. 在终端区域显示该 Session 的 AI Agent 对话界面
 2. 右侧显示该 Session 的改动文件列表
 3. 列表项高亮显示
 
-**切换行为**：切换 Session 时保留之前的终端状态
+**切换行为**：切换 Session 时保留之前的对话状态
 
 #### 2.3 编辑 Session 名称
 
@@ -136,7 +205,7 @@ Worktree 目录处理：
 **触发方式**：Session 项上的关闭图标 / 右键菜单
 
 **操作**：
-- 停止终端进程
+- 停止 Agent 进程
 - 保留 worktree 和改动
 - Session 状态变为 `closed`
 - 仍在列表显示，可重新打开
@@ -159,7 +228,7 @@ Worktree 目录处理：
 ```
 
 **操作**：
-1. 停止终端进程
+1. 停止 Agent 进程
 2. 执行 `git worktree remove {path}`
 3. 执行 `git branch -D {branch}`
 4. 删除 Session 记录
@@ -167,47 +236,87 @@ Worktree 目录处理：
 **边界处理**：
 | 情况 | 处理 |
 |------|------|
-| 终端正在运行 | 警告后强制终止 |
+| Agent 正在运行 | 警告后强制终止 |
 | worktree 被占用 | 显示错误，提供手动清理指引 |
 
 ---
 
-### 3. 嵌入式终端
+### 3. AI Agent 对话界面
 
-#### 3.1 终端配置
+#### 3.1 Agent 选择
 
-| 配置项 | 值 |
-|--------|-----|
-| Shell | 用户默认 $SHELL 或 /bin/zsh |
-| 工作目录 | Session 的 worktree 路径 |
-| 环境变量 | 继承用户环境 |
-| 默认尺寸 | 80 × 24 |
-| 颜色 | 256 色 + True Color |
+**位置**：Session 终端区域顶部
 
-#### 3.2 终端功能
+**选项**：
+- Codex
+- Claude Code
+- 更多（可扩展）
 
-- 键盘输入（含 Ctrl 组合键）
-- 复制粘贴（Cmd+C/V）
-- 鼠标滚动
-- Tab 补全（shell 提供）
-- Ctrl+C 中断
-- 尺寸随窗口自适应
+**切换行为**：切换 Agent 类型会开始新的对话会话
 
-#### 3.3 错误处理
+#### 3.2 对话界面
 
-**Shell 启动失败时**：
+**布局**：
+```
+┌─────────────────────────────────────────────┐
+│ [Codex ▼]                     Session 1     │
+├─────────────────────────────────────────────┤
+│                                             │
+│  User: 分析这个项目的结构                    │
+│                                             │
+│  Agent: 这是一个 Electron 项目...           │
+│         正在执行: ls -la                    │
+│         [执行结果显示]                       │
+│                                             │
+│  User: 帮我优化 App.tsx                     │
+│                                             │
+│  Agent: 正在分析 App.tsx...                 │
+│         [流式输出中...]                      │
+│                                             │
+├─────────────────────────────────────────────┤
+│ [输入框: 输入你的指令...]          [发送]   │
+└─────────────────────────────────────────────┘
+```
+
+**功能**：
+- 流式显示 Agent 输出
+- 显示命令执行过程
+- 支持中断当前任务（Ctrl+C）
+- 历史消息滚动查看
+
+#### 3.3 Agent 状态
+
+| 状态 | 显示 |
+|------|------|
+| idle | 绿色圆点，可输入 |
+| running | 黄色旋转图标，显示"思考中..." |
+| error | 红色圆点，显示错误信息 |
+
+#### 3.4 错误处理
+
+**CLI 未安装时**：
 ```
 ┌────────────────────────────────┐
-│  ⚠️ 终端启动失败               │
+│  ⚠️ Codex CLI 未安装           │
 │                                │
-│  无法启动 shell: {shell}       │
-│  错误: {message}               │
+│  请先安装 Codex CLI:           │
+│  npm install -g @openai/codex  │
 │                                │
-│  [重试]                        │
+│  [打开安装文档]                 │
 └────────────────────────────────┘
 ```
 
-**Shell 异常退出**：显示退出码，提供"重启终端"按钮
+**未登录时**：
+```
+┌────────────────────────────────┐
+│  ⚠️ 需要登录                   │
+│                                │
+│  请在终端中执行:               │
+│  codex login                   │
+│                                │
+│  [复制命令]                    │
+└────────────────────────────────┘
+```
 
 ---
 
@@ -322,16 +431,16 @@ git merge {session-branch}
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  CLI Worktree Manager                              [—] [□] [×]      │
+│  Owl - CLI Worktree Manager                        [—] [□] [×]      │
 ├────────────────────┬────────────────────────────┬───────────────────┤
 │ WORKSPACES         │                            │ CHANGES           │
-│                    │                            │                   │
+│                    │   [Codex ▼] Session 1      │                   │
 │ ▼ my-project       │                            │ ▼ Modified (3)    │
-│   ├─ Session 1 ●   │       Terminal Area        │   ~ App.tsx       │
+│   ├─ Session 1 ●   │   User: 分析项目结构       │   ~ App.tsx       │
 │   └─ Session 2 ○   │                            │   ~ index.ts      │
-│                    │                            │   ~ package.json  │
+│                    │   Agent: 这是一个...       │   ~ package.json  │
 │ ▼ another-repo     │                            │                   │
-│   └─ Session 1     │                            │ ▼ Untracked (1)   │
+│   └─ Session 1     │   [输入框...]    [发送]    │ ▼ Untracked (1)   │
 │                    │                            │   + new.ts        │
 │                    │                            │                   │
 │ [+ Add Workspace]  │                            │ [Merge] [刷新]    │
@@ -345,7 +454,7 @@ git merge {session-branch}
 | 区域 | 默认宽度 | 最小宽度 | 可拖拽调整 |
 |------|----------|----------|------------|
 | 左侧边栏 | 240px | 180px | ✅ |
-| 终端区域 | 弹性 | 400px | ✅ |
+| Agent 对话区 | 弹性 | 400px | ✅ |
 | 右侧边栏 | 280px | 200px | ✅ |
 
 ### 配色（深色主题）
@@ -368,6 +477,8 @@ git merge {session-branch}
 | Cmd+Tab | 切换 Session |
 | Cmd+R | 刷新改动列表 |
 | Cmd+Shift+M | 打开合并对话框 |
+| Cmd+Enter | 发送消息 |
+| Ctrl+C | 中断 Agent |
 
 ---
 
@@ -395,7 +506,26 @@ interface Session {
   worktreePath: string // Worktree 绝对路径
   baseBranch: string // 创建时的基础分支
   status: 'active' | 'closed' | 'error'
+  agentType: 'codex' | 'claude' // 当前使用的 Agent
+  agentSessionId: string | null // CLI 会话 ID（用于 resume）
   createdAt: string
+}
+```
+
+### AgentMessage
+
+```typescript
+interface AgentMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: string
+  // Agent 执行的命令
+  commands?: {
+    command: string
+    output: string
+    exitCode: number
+  }[]
 }
 ```
 
@@ -426,8 +556,7 @@ interface StoreSchema {
   workspaces: Workspace[]
   sessions: Session[]
   preferences: {
-    terminalFontSize: number // 默认 13
-    terminalFontFamily: string // 默认 'SF Mono, Monaco, Consolas, monospace'
+    defaultAgent: 'codex' | 'claude' // 默认 'codex'
     autoRefreshInterval: number // 默认 1000ms
     confirmBeforeDelete: boolean // 默认 true
   }
@@ -435,100 +564,9 @@ interface StoreSchema {
 ```
 
 **存储路径**：
-- macOS: `~/Library/Application Support/cli-worktree-manager/config.json`
-- Windows: `%APPDATA%/cli-worktree-manager/config.json`
-- Linux: `~/.config/cli-worktree-manager/config.json`
-
----
-
-## 技术架构
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│                     Renderer Process                          │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐              │
-│  │  React UI  │  │  xterm.js  │  │  Zustand   │              │
-│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘              │
-│        └───────────────┼───────────────┘                      │
-│                        │                                      │
-│               IPC (preload.js)                                │
-└────────────────────────┼─────────────────────────────────────┘
-                         │
-┌────────────────────────┼─────────────────────────────────────┐
-│                  Main Process                                 │
-│                        │                                      │
-│  ┌────────────┐  ┌─────┴──────┐  ┌────────────┐              │
-│  │ GitService │  │  PTYManager │  │ConfigStore │              │
-│  │(simple-git)│  │ (node-pty) │  │(electron-  │              │
-│  │            │  │            │  │ store)     │              │
-│  └─────┬──────┘  └─────┬──────┘  └────────────┘              │
-│        │               │                                      │
-│        ▼               ▼                                      │
-│   [Git CLI]       [Shell]                                     │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### IPC 通道
-
-```typescript
-const IPC_CHANNELS = {
-  // Workspace
-  'workspace:add': (path: string) => Workspace | Error,
-  'workspace:list': () => Workspace[],
-  'workspace:remove': (id: string, deleteWorktrees: boolean) => void,
-
-  // Session
-  'session:create': (workspaceId: string) => Session,
-  'session:list': (workspaceId: string) => Session[],
-  'session:open': (sessionId: string) => void,
-  'session:close': (sessionId: string) => void,
-  'session:delete': (sessionId: string) => void,
-  'session:rename': (sessionId: string, name: string) => void,
-
-  // Terminal
-  'terminal:data': (sessionId: string, data: string) => void,  // 双向
-  'terminal:resize': (sessionId: string, cols: number, rows: number) => void,
-
-  // Git
-  'git:status': (worktreePath: string) => FileStatus[],
-  'git:merge': (repo: string, source: string, target: string) => MergeResult,
-  'git:branches': (repo: string) => string[],
-
-  // File Watcher
-  'file:changed': (sessionId: string) => void,  // Main → Renderer
-};
-```
-
-### Git 命令参考
-
-```bash
-# 检测 Git 仓库
-test -d {path}/.git
-
-# 获取当前分支
-git -C {repo} rev-parse --abbrev-ref HEAD
-
-# 列出分支
-git -C {repo} branch --list
-
-# 创建分支
-git -C {repo} branch {branch}
-
-# 创建 worktree
-git -C {repo} worktree add {worktree-path} {branch}
-
-# 删除 worktree
-git -C {repo} worktree remove {worktree-path}
-
-# 删除分支
-git -C {repo} branch -D {branch}
-
-# 获取状态
-git -C {worktree} status --porcelain
-
-# 合并
-git -C {repo} checkout {target} && git -C {repo} merge {source}
-```
+- macOS: `~/Library/Application Support/owl/config.json`
+- Windows: `%APPDATA%/owl/config.json`
+- Linux: `~/.config/owl/config.json`
 
 ---
 
@@ -540,17 +578,14 @@ git -C {repo} checkout {target} && git -C {repo} merge {source}
 |----|------|------|
 | electron | ^28.0.0 | 桌面框架 |
 | react | ^18.2.0 | UI |
-| xterm | ^5.3.0 | 终端前端 |
-| xterm-addon-fit | ^0.8.0 | 终端自适应 |
-| node-pty | ^1.0.0 | PTY 后端 |
-| simple-git | ^3.20.0 | Git 操作 |
-| electron-store | ^8.1.0 | 配置持久化 |
-| chokidar | ^3.5.3 | 文件监听 |
 | zustand | ^4.4.0 | 状态管理 |
+| chokidar | ^3.5.3 | 文件监听 |
 
 ### 系统依赖
 
 - Git ≥ 2.20（需在 PATH 中）
+- Codex CLI（可选，用户自行安装）
+- Claude CLI（可选，用户自行安装）
 
 ---
 
@@ -559,7 +594,7 @@ git -C {repo} checkout {target} && git -C {repo} merge {source}
 | 操作 | 目标 |
 |------|------|
 | Session 创建 | < 3s |
-| 终端启动 | < 500ms |
+| Agent 响应首字 | < 2s |
 | Git status 刷新 | < 1s（< 10k 文件仓库）|
 | UI 响应 | < 100ms |
 
@@ -570,11 +605,12 @@ git -C {repo} checkout {target} && git -C {repo} merge {source}
 **包含**：
 - Workspace 增删查
 - Session 增删查 + 重命名
-- 嵌入式终端
+- Codex Agent 对话（多轮）
 - 改动文件列表（自动刷新）
 - 合并到目标分支
 
-**不包含**：
+**不包含（V2）**：
+- Claude Code 支持
 - Diff 预览
 - 文件内容查看
 - Stage/unstage 操作
@@ -588,9 +624,10 @@ git -C {repo} checkout {target} && git -C {repo} merge {source}
 | 术语 | 定义 |
 |------|------|
 | Workspace | 已注册的本地 Git 仓库 |
-| Session | 一个 worktree + 关联终端 |
+| Session | 一个 worktree + 关联的 AI Agent 对话 |
 | Worktree | Git 的同仓库多检出目录特性 |
+| Agent | CLI 编程助手（Codex、Claude Code 等）|
 
 ---
 
-*文档版本 2.0 | 2026-01-30*
+*文档版本 3.0 | 2026-01-31*

@@ -1,8 +1,10 @@
 import { TooltipProvider } from '@renderer/components/ui/tooltip'
+import { useEffect } from 'react'
 import { InspectorPanel } from './features/inspector'
 import { Sidebar } from './features/sidebar'
 import { TerminalPanel } from './features/terminal'
 import { AppLayout, PanelLayout } from './layout'
+import { ipcServices } from './lib/ipc-client'
 import { useAppStore } from './store'
 import './app.css'
 
@@ -21,15 +23,21 @@ function App(): React.JSX.Element {
     getActiveSession,
 
     // Actions
+    fetchWorkspaces,
+    addWorkspaceFromPath,
     selectWorkspace,
     selectSession,
     refreshChanges,
     toggleSidebar,
-    resetToMockData,
     setTerminal,
   } = useAppStore()
 
   const activeSession = getActiveSession()
+
+  // Fetch workspaces on mount
+  useEffect(() => {
+    fetchWorkspaces()
+  }, [fetchWorkspaces])
 
   // Terminal actions (mock for now)
   const handleStartTerminal = () => {
@@ -47,9 +55,28 @@ function App(): React.JSX.Element {
     }, 500)
   }
 
-  // Workspace actions (mock for now)
-  const handleAddWorkspace = () => {
-    // TODO: Open file dialog via IPC
+  // Workspace actions
+  const handleAddWorkspace = async () => {
+    if (!ipcServices) {
+      console.error('IPC services not available')
+      return
+    }
+
+    // Open native folder selection dialog
+    const dialogResult = await ipcServices.system.showOpenFolderDialog()
+    if (!dialogResult.ok || !dialogResult.data) {
+      // User cancelled or error
+      return
+    }
+
+    const folderPath = dialogResult.data
+
+    // Add workspace via IPC
+    const result = await addWorkspaceFromPath(folderPath)
+    if (!result.ok) {
+      // TODO: Show error toast/notification
+      console.error('Failed to add workspace:', result.error)
+    }
   }
 
   const handleCreateSession = () => {
@@ -76,7 +103,7 @@ function App(): React.JSX.Element {
               onAddWorkspace={handleAddWorkspace}
               onCreateSession={handleCreateSession}
               onToggleCollapse={toggleSidebar}
-              onRetry={resetToMockData}
+              onRetry={fetchWorkspaces}
             />
           )}
           main={(

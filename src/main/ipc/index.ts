@@ -1,4 +1,4 @@
-import type { ExtractServiceMethods } from 'electron-ipc-decorator'
+import type { MergeIpcService } from 'electron-ipc-decorator'
 import { createServices } from 'electron-ipc-decorator'
 
 import { GitIpcService } from './services/git'
@@ -15,10 +15,8 @@ const services = createServices([
   GitIpcService,
 ])
 
-// ExtractServiceMethods expects a service instance, so we map over each service
-export type IpcServices = {
-  [K in keyof typeof services]: ExtractServiceMethods<(typeof services)[K]>
-}
+// MergeIpcService correctly extracts method types for client-side proxy
+export type IpcServices = MergeIpcService<typeof services>
 
 export function initializeIpcServices(): void {
   void services
