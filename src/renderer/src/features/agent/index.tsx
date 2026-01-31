@@ -1,45 +1,71 @@
-import { Button } from '@renderer/components/ui/button'
-import { ScrollArea } from '@renderer/components/ui/scroll-area'
+import {
+  Message,
+  MessageContent,
+  MessageResponse,
+} from '@renderer/components/ai-elements/message'
+import {
+  PromptInput,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  type PromptInputMessage,
+} from '@renderer/components/ai-elements/prompt-input'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip'
 import { ipcServices } from '@renderer/lib/ipcClient'
 import { agentLogger } from '@renderer/lib/logger'
-import { Loader2, MessageSquare, Send, Square } from 'lucide-react'
+import { useSessionStore, useUIStore } from '@renderer/store'
+import {
+  ChevronRight,
+  FolderOpen,
+  Loader2,
+  MessageSquare,
+  PanelLeft,
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
-interface Message {
+// ============================================================================
+// Types
+// ============================================================================
+
+interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
 }
+
+type ChatStatus = 'ready' | 'submitted' | 'streaming' | 'error'
+
+// ============================================================================
+// AgentChat Component
+// ============================================================================
 
 interface AgentChatProps {
   sessionId: string | null
   cwd: string | null
 }
 
-export function AgentChat({ sessionId, cwd }: AgentChatProps) {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [status, setStatus] = useState<'idle' | 'running'>('idle')
+function AgentChat({ sessionId, cwd }: AgentChatProps) {
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [status, setStatus] = useState<ChatStatus>('ready')
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // Send message
-  const handleSend = async () => {
-    if (!input.trim() || !sessionId || !cwd || status === 'running')
+  const handleSubmit = async (message: PromptInputMessage) => {
+    if (!message.text.trim() || !sessionId || !cwd || status !== 'ready')
       return
     if (!ipcServices) {
       agentLogger.error('IPC services not available')
       return
     }
 
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: input.trim(),
+      content: message.text.trim(),
     }
 
     setMessages(prev => [...prev, userMessage])
-    setInput('')
-    setStatus('running')
+    setStatus('submitted')
 
     agentLogger.info(`Sending message to session ${sessionId}`)
 
@@ -47,12 +73,12 @@ export function AgentChat({ sessionId, cwd }: AgentChatProps) {
       const result = await ipcServices.agent.send(sessionId, cwd, userMessage.content)
       if (!result.ok) {
         agentLogger.error(`Failed to send message: ${result.error}`)
-        setStatus('idle')
+        setStatus('error')
       }
     }
     catch (error) {
       agentLogger.error('Failed to send message', error)
-      setStatus('idle')
+      setStatus('error')
     }
   }
 
@@ -63,27 +89,32 @@ export function AgentChat({ sessionId, cwd }: AgentChatProps) {
         return
 
       agentLogger.info('Received message from agent')
-      const assistantMessage: Message = {
+      const assistantMessage: ChatMessage = {
         id: Date.now().toString(),
         role: 'assistant',
         content: text,
       }
       setMessages(prev => [...prev, assistantMessage])
-      setStatus('idle')
+      setStatus('ready')
     }
 
     const handleStatus = (_: unknown, sid: string, newStatus: string) => {
       if (sid !== sessionId)
         return
       agentLogger.debug(`Status changed: ${newStatus}`)
-      setStatus(newStatus as 'idle' | 'running')
+      if (newStatus === 'running') {
+        setStatus('streaming')
+      }
+      else if (newStatus === 'idle') {
+        setStatus('ready')
+      }
     }
 
     const handleError = (_: unknown, sid: string, error: string) => {
       if (sid !== sessionId)
         return
       agentLogger.error(`Agent error: ${error}`)
-      setStatus('idle')
+      setStatus('error')
     }
 
     // Listen for log messages from main process
@@ -114,14 +145,6 @@ export function AgentChat({ sessionId, cwd }: AgentChatProps) {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Handle keyboard events
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
-
   // Interrupt
   const handleInterrupt = async () => {
     if (sessionId && ipcServices) {
@@ -141,83 +164,137 @@ export function AgentChat({ sessionId, cwd }: AgentChatProps) {
     )
   }
 
+  const isGenerating = status === 'submitted' || status === 'streaming'
+
   return (
     <div className="flex h-full flex-col">
-      {/* Message list */}
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
+      {/* Message list - scrollable, takes remaining space */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-3xl space-y-6 p-4 pb-8">
           {messages.length === 0 && (
-            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-muted-foreground/40">
+            <div className="flex h-[60vh] flex-col items-center justify-center gap-3 text-muted-foreground/40">
               <MessageSquare className="h-8 w-8" />
               <p className="text-sm">Start a conversation with the agent</p>
             </div>
           )}
 
           {messages.map(msg => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                  msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white/5 text-foreground ring-1 ring-white/10'
-                }`}
-              >
-                <pre className="whitespace-pre-wrap font-sans text-sm">{msg.content}</pre>
-              </div>
-            </div>
+            <Message key={msg.id} from={msg.role}>
+              <MessageContent>
+                {msg.role === 'assistant'
+                  ? (
+                      <MessageResponse>{msg.content}</MessageResponse>
+                    )
+                  : (
+                      <span className="whitespace-pre-wrap">{msg.content}</span>
+                    )}
+              </MessageContent>
+            </Message>
           ))}
 
-          {status === 'running' && (
-            <div className="flex justify-start">
-              <div className="flex items-center gap-2 rounded-lg bg-white/5 px-4 py-2 text-muted-foreground ring-1 ring-white/10">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Thinking...</span>
-              </div>
-            </div>
+          {isGenerating && (
+            <Message from="assistant">
+              <MessageContent>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Thinking...</span>
+                </div>
+              </MessageContent>
+            </Message>
           )}
 
           <div ref={scrollRef} />
         </div>
-      </ScrollArea>
+      </div>
 
-      {/* Input area */}
-      <div className="border-t border-white/5 p-4">
-        <div className="flex gap-2">
-          <textarea
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your message... (Cmd+Enter to send)"
-            className="flex-1 resize-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
-            rows={2}
-            disabled={status === 'running'}
+      {/* Input area - fixed at bottom */}
+      <div className="mx-auto w-full max-w-3xl shrink-0 px-4 pb-4">
+        <PromptInput
+          onSubmit={handleSubmit}
+          className="border-white/10 bg-white/5 transition-colors focus-within:border-white/20 focus-within:bg-white/[0.07] [&:has([data-slot=input-group-control]:focus-visible)]:ring-0"
+        >
+          <PromptInputTextarea
+            placeholder="Type your message..."
+            disabled={isGenerating}
+            className="placeholder:text-muted-foreground/50"
           />
+          <PromptInputFooter>
+            <span className="text-xs text-muted-foreground/70">
+              Enter to send
+            </span>
+            <PromptInputSubmit
+              status={status}
+              onStop={handleInterrupt}
+              disabled={isGenerating && status !== 'streaming'}
+            />
+          </PromptInputFooter>
+        </PromptInput>
+      </div>
+    </div>
+  )
+}
 
-          {status === 'running'
-            ? (
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={handleInterrupt}
-                  className="h-auto self-end"
+// ============================================================================
+// AgentPanel Component (Main Export)
+// ============================================================================
+
+export function AgentPanel() {
+  const activeSession = useSessionStore(state => state.getActiveSession())
+  const { sidebarCollapsed, toggleSidebar } = useUIStore()
+
+  return (
+    <main className="flex h-full flex-col overflow-hidden bg-[#1e1e1e] text-foreground">
+      {/* Header */}
+      <div className="flex h-13 shrink-0 items-center justify-between border-b border-white/5 bg-[#1e1e1e] px-4 window-drag">
+        <div className="flex items-center gap-3">
+          {/* Sidebar Left Toggle - offset for macOS traffic lights when sidebar is collapsed */}
+          {sidebarCollapsed && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={toggleSidebar}
+                  className="window-no-drag ml-[60px] flex items-center justify-center rounded-sm text-muted-foreground/60 transition-colors hover:text-foreground"
                 >
-                  <Square className="h-4 w-4" />
-                </Button>
+                  <PanelLeft className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Show sidebar</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Breadcrumbs */}
+          {activeSession
+            ? (
+                <div className="flex items-center gap-1.5 text-[13px] font-medium leading-none">
+                  <span className="flex items-center gap-1.5 text-muted-foreground/60">
+                    <FolderOpen className="h-3.5 w-3.5" />
+                    <span>Owlet</span>
+                  </span>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
+                  <span className="flex items-center gap-1.5 text-foreground">
+                    <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                    <span>{activeSession.name}</span>
+                  </span>
+
+                  {/* Status Indicator */}
+                  <span className="ml-2 h-1.5 w-1.5 rounded-full ring-1 ring-background bg-emerald-500 animate-pulse" />
+                </div>
               )
             : (
-                <Button
-                  onClick={handleSend}
-                  disabled={!input.trim()}
-                  className="h-auto self-end"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+                <span className="text-[13px] text-muted-foreground/50 italic">
+                  No session active
+                </span>
               )}
         </div>
       </div>
-    </div>
+
+      {/* Agent Chat */}
+      <div className="min-h-0 flex-1 overflow-hidden bg-[#1c1c1e]">
+        <AgentChat
+          sessionId={activeSession?.id ?? null}
+          cwd={activeSession?.worktreePath ?? null}
+        />
+      </div>
+    </main>
   )
 }

@@ -18,7 +18,9 @@
       "Bash(find:*)",
       "Bash(npm run lint:*)",
       "Bash(npm info:*)",
-      "Bash(npm view:*)"
+      "Bash(npm view:*)",
+      "Bash(pnpm run typecheck:*)",
+      "Bash(pnpm run typecheck:web:*)"
     ]
   }
 }

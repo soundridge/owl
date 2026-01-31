@@ -7,7 +7,7 @@ import {
 } from '@renderer/components/ui/collapsible'
 import { Skeleton } from '@renderer/components/ui/skeleton'
 import { ChevronRight, FolderGit2, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SessionCard } from './SessionCard'
 
 interface WorkspaceGroupProps {
@@ -30,13 +30,20 @@ export function WorkspaceGroup({
   isLoading = false,
 }: WorkspaceGroupProps) {
   const [isOpen, setIsOpen] = useState(isActive)
+
+  // Auto-expand when workspace becomes active (e.g., after creating a session)
+  useEffect(() => {
+    if (isActive) {
+      setIsOpen(true)
+    }
+  }, [isActive])
   const hasNoSessions = workspace.sessions.length === 0
 
   return (
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="group/workspace space-y-1"
+      className="group/workspace space-y-1 border-b border-border/50 pb-2"
     >
       <CollapsibleTrigger
         onClick={onSelect}
@@ -51,7 +58,7 @@ export function WorkspaceGroup({
       </CollapsibleTrigger>
 
       <CollapsibleContent>
-        <div className="flex flex-col gap-1 pl-6">
+        <div className="flex flex-col gap-1">
           {/* Loading state */}
           {isLoading && (
             <div className="space-y-2 py-2">
@@ -62,7 +69,7 @@ export function WorkspaceGroup({
 
           {/* Empty state */}
           {!isLoading && hasNoSessions && (
-            <div className="py-2 text-xs text-muted-foreground/60 italic">
+            <div className="flex justify-center py-2 text-xs text-muted-foreground/60 italic">
               No sessions active
             </div>
           )}

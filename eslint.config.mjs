@@ -9,5 +9,6 @@ export default antfu({
     '**/dist',
     '**/out',
     '**/src/renderer/src/components/ui',
+    '**/src/renderer/src/components/ai-elements',
   ],
 })

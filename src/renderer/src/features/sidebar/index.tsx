@@ -112,7 +112,7 @@ export function Sidebar() {
 
   const renderContent = (): ReactNode => (
     <ScrollArea className="flex-1">
-      <div className="flex flex-col gap-2 p-3">
+      <div className="flex flex-col gap-2">
         {status === 'loading' && renderLoadingState()}
         {status === 'error' && renderErrorState()}
         {hasNoWorkspaces && renderEmptyState()}

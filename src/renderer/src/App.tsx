@@ -1,7 +1,7 @@
 import { TooltipProvider } from '@renderer/components/ui/tooltip'
+import { AgentPanel } from './features/agent'
 import { InspectorPanel } from './features/inspector'
 import { Sidebar } from './features/sidebar'
-import { AgentPanel } from './features/terminal'
 import { useUIStore } from './store'
 import './app.css'
 

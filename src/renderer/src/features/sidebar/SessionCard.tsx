@@ -19,12 +19,16 @@ export function SessionCard({ session, isActive = false, onClick, onClose }: Ses
       onClick={onClick}
       role="button"
       className={cn(
-        'group/session relative flex w-full cursor-pointer items-center gap-3 rounded-md border border-transparent px-3 py-2 transition-all',
+        'group/session relative flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2 transition-all',
         isActive
-          ? 'bg-accent/50 text-accent-foreground shadow-sm ring-1 ring-border'
+          ? 'bg-primary/10 text-foreground'
           : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground',
       )}
     >
+      {/* Active indicator */}
+      {isActive && (
+        <div className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary" />
+      )}
       {/* Icon & Status */}
       <div className="relative flex shrink-0 items-center justify-center">
         <TerminalSquare className={cn('h-4 w-4', isActive ? 'text-foreground' : 'text-muted-foreground')} />
