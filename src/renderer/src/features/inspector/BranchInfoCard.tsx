@@ -76,13 +76,17 @@ export function BranchInfoCard({ branchInfo, onMerge, onRetry }: BranchInfoCardP
           {data.ahead > 0 && (
             <span className="flex items-center gap-1 text-emerald-500">
               <ArrowUp className="h-3 w-3" />
-              {data.ahead} ahead
+              {data.ahead}
+              {' '}
+              ahead
             </span>
           )}
           {data.behind > 0 && (
             <span className="flex items-center gap-1 text-amber-500">
               <ArrowDown className="h-3 w-3" />
-              {data.behind} behind
+              {data.behind}
+              {' '}
+              behind
             </span>
           )}
         </div>

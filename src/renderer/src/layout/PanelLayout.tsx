@@ -17,16 +17,11 @@ export function PanelLayout({
     <div className="flex h-full w-full">
       {/* Sidebar - fixed 220px */}
       {!sidebarCollapsed && (
-        <>
-          <div className="h-full w-[220px] shrink-0">{sidebar}</div>
-          <div className="h-full w-px shrink-0 bg-border" />
-        </>
+        <div className="h-full w-[220px] shrink-0">{sidebar}</div>
       )}
 
       {/* Main (Terminal) - flexible */}
       <div className="h-full min-w-0 flex-1">{main}</div>
-
-      <div className="h-full w-px shrink-0 bg-border" />
 
       {/* Inspector - fixed 220px */}
       <div className="h-full w-[220px] shrink-0">{inspector}</div>

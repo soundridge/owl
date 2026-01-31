@@ -27,10 +27,12 @@ export function ChangesTab({ changes, onFileClick, onRefresh }: ChangesTabProps)
 
   // Group changes by status
   const groups = useMemo(() => {
-    if (!data) return {}
+    if (!data)
+      return {}
     return data.reduce((acc, file) => {
       const key = file.status
-      if (!acc[key]) acc[key] = []
+      if (!acc[key])
+        acc[key] = []
       acc[key].push(file)
       return acc
     }, {} as Record<FileChangeStatus, FileChange[]>)
@@ -103,15 +105,20 @@ export function ChangesTab({ changes, onFileClick, onRefresh }: ChangesTabProps)
         {/* File list groups */}
         {status === 'success' && data && data.length > 0 && (
           <div className="flex flex-col gap-4">
-            {groupOrder.map(statusKey => {
+            {groupOrder.map((statusKey) => {
               const files = groups[statusKey]
-              if (!files || files.length === 0) return null
+              if (!files || files.length === 0)
+                return null
 
               return (
                 <div key={statusKey} className="flex flex-col gap-1">
                   <div className="flex items-center gap-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                     <span>{groupLabels[statusKey]}</span>
-                    <span className="opacity-50">({files.length})</span>
+                    <span className="opacity-50">
+                      (
+                      {files.length}
+                      )
+                    </span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     {files.map(file => (

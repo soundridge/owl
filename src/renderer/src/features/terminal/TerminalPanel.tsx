@@ -36,15 +36,15 @@ export function TerminalPanel({
   return (
     <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#1e1e1e] text-foreground">
       {/* Header */}
-      <div className="flex h-[42px] shrink-0 items-center justify-between border-b border-white/5 bg-[#1e1e1e] px-4 window-drag">
+      <div className="flex h-13 shrink-0 items-center justify-between border-b border-white/5 bg-[#1e1e1e] px-4 window-drag">
         <div className="flex items-center gap-3">
-          {/* Sidebar Left Toggle */}
+          {/* Sidebar Left Toggle - offset for macOS traffic lights when sidebar is collapsed */}
           {sidebarCollapsed && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={onToggleSidebar}
-                  className="window-no-drag flex items-center justify-center rounded-sm text-muted-foreground/60 transition-colors hover:text-foreground"
+                  className="window-no-drag ml-[60px] flex items-center justify-center rounded-sm text-muted-foreground/60 transition-colors hover:text-foreground"
                 >
                   <PanelLeft className="h-4 w-4" />
                 </button>
@@ -56,89 +56,81 @@ export function TerminalPanel({
           {/* Breadcrumbs */}
           {session
             ? (
-              <div className="flex items-center gap-1.5 text-[13px] font-medium leading-none">
-                <span className="flex items-center gap-1.5 text-muted-foreground/60">
-                  <FolderOpen className="h-3.5 w-3.5" />
-                  <span>Owlet</span>
-                </span>
-                <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
-                <span className="flex items-center gap-1.5 text-foreground">
-                  <TerminalIcon className="h-3.5 w-3.5 text-primary" />
-                  <span>{session.name}</span>
-                </span>
+                <div className="flex items-center gap-1.5 text-[13px] font-medium leading-none">
+                  <span className="flex items-center gap-1.5 text-muted-foreground/60">
+                    <FolderOpen className="h-3.5 w-3.5" />
+                    <span>Owlet</span>
+                  </span>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
+                  <span className="flex items-center gap-1.5 text-foreground">
+                    <TerminalIcon className="h-3.5 w-3.5 text-primary" />
+                    <span>{session.name}</span>
+                  </span>
 
-                {/* Status Indicator */}
-                <span className={`ml-2 h-1.5 w-1.5 rounded-full ring-1 ring-background ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'}`} />
-              </div>
-            )
+                  {/* Status Indicator */}
+                  <span className={`ml-2 h-1.5 w-1.5 rounded-full ring-1 ring-background ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'}`} />
+                </div>
+              )
             : (
-              <span className="text-[13px] text-muted-foreground/50 italic">
-                No session active
-              </span>
-            )}
+                <span className="text-[13px] text-muted-foreground/50 italic">
+                  No session active
+                </span>
+              )}
         </div>
 
         {/* Controls */}
         {session && (
           <div className="window-no-drag flex items-center gap-1">
-            {!isConnected
-              ? (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={onStartTerminal}
-                  className="h-6 gap-1.5 rounded-sm px-2 text-[11px] font-semibold"
-                >
-                  <Play className="h-3 w-3 fill-current" />
-                  Connect
-                </Button>
-              )
-              : (
-                <div className="flex items-center bg-white/5 rounded-md p-0.5">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onRestartTerminal}
-                        className="h-6 w-6 rounded-sm text-muted-foreground hover:bg-white/10 hover:text-foreground"
-                      >
-                        <RotateCw className="h-3 w-3" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Restart Session</TooltipContent>
-                  </Tooltip>
-                  <div className="mx-0.5 h-3 w-px bg-white/10" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onStopTerminal}
-                        className="h-6 w-6 rounded-sm text-muted-foreground hover:bg-white/10 hover:text-destructive"
-                      >
-                        <Square className="h-3 w-3 fill-current" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Kill Session</TooltipContent>
-                  </Tooltip>
-                </div>
-              )}
+            <div className="flex items-center bg-white/5 rounded-md p-0.5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onRestartTerminal}
+                    className="h-6 w-6 rounded-sm text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                  >
+                    <RotateCw className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Restart Session</TooltipContent>
+              </Tooltip>
+              <div className="mx-0.5 h-3 w-px bg-white/10" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onStopTerminal}
+                    className="h-6 w-6 rounded-sm text-muted-foreground hover:bg-white/10 hover:text-destructive"
+                  >
+                    <Square className="h-3 w-3 fill-current" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Kill Session</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         )}
       </div>
 
       {/* Terminal Viewport */}
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#1e1e1e]">
-        {!session ? (
-          <EmptyTerminalState />
-        ) : hasError ? (
-          <ErrorTerminalState message="Connection to pty host failed" onRetry={onStartTerminal} />
-        ) : !isConnected ? (
-          <DisconnectedState onConnect={onStartTerminal} />
-        ) : (
-          <TerminalContainer session={session} />
-        )}
+        {!session
+          ? (
+              <EmptyTerminalState />
+            )
+          : hasError
+            ? (
+                <ErrorTerminalState message="Connection to pty host failed" onRetry={onStartTerminal} />
+              )
+            : !isConnected
+                ? (
+                    <DisconnectedState onConnect={onStartTerminal} />
+                  )
+                : (
+                    <TerminalContainer session={session} />
+                  )}
       </div>
     </main>
   )
@@ -191,7 +183,11 @@ function TerminalContainer({ session }: { session: Session }) {
       {/* Mock XTerm */}
       <div className="h-full w-full font-mono text-[13px] leading-relaxed text-[#cccccc]">
         <div className="opacity-50 mb-2">
-          Last login: {new Date().toLocaleString()} on ttys001
+          Last login:
+          {' '}
+          {new Date().toLocaleString()}
+          {' '}
+          on ttys001
         </div>
         <div className="flex gap-2">
           <span className="text-emerald-500 font-bold">➜</span>

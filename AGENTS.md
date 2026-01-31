@@ -103,3 +103,22 @@ components/ui/ (shadcn/ui，禁止修改)
 - 目录同样使用驼峰；避免短横线、下划线
 - 第三方生成或约定文件名（如 `components/ui` 内 shadcn 组件、外部配置文件）保留原名
 - 新增文件必须遵循驼峰命名，否则不予合并
+
+## React 组件编写规范
+
+- **区域拆分**：使用箭头函数形式的 `render` 方法划分 UI 区域，提升可读性
+  ```tsx
+  const renderHeader = (): ReactNode => (...)
+  const renderContent = (): ReactNode => (...)
+  const renderFooter = (): ReactNode => (...)
+
+  return (
+    <div>
+      {renderHeader()}
+      {renderContent()}
+      {renderFooter()}
+    </div>
+  )
+  ```
+- 命名以 `render` 开头，如 `renderHeader`、`renderEmptyState`、`renderWorkspaceList`
+- 统一使用箭头函数，不使用 `function` 声明

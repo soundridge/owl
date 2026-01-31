@@ -24,7 +24,7 @@ export function InspectorPanel({
   return (
     <aside className="group/inspector flex h-full w-full flex-col overflow-hidden border-l border-border bg-card text-card-foreground">
       {/* Header */}
-      <div className="flex h-[42px] shrink-0 items-center border-b border-border/40 px-4 window-drag">
+      <div className="flex h-13 shrink-0 items-center border-b border-border/40 px-4 window-drag">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Layers className="h-4 w-4" />
           <span className="text-[13px] font-medium">Inspector</span>
