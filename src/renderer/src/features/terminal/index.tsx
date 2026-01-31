@@ -1,11 +1,11 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip'
+import { useSessionStore, useUIStore } from '@renderer/store'
 import {
   ChevronRight,
   FolderOpen,
   MessageSquare,
   PanelLeft,
 } from 'lucide-react'
-import { useSessionStore, useUIStore } from '@renderer/store'
 import { AgentChat } from '../agent'
 
 export function AgentPanel() {

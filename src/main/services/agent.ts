@@ -3,8 +3,11 @@
  * Spawns codex exec processes and handles JSONL output
  */
 
-import { ChildProcess, spawn } from 'node:child_process'
+import type { Buffer } from 'node:buffer'
+import type { ChildProcess } from 'node:child_process'
 import type { AgentSession as AgentSessionBase, AgentStatus, IpcResult } from '../types'
+import { spawn } from 'node:child_process'
+import process from 'node:process'
 import { BrowserWindow } from 'electron'
 
 /**
@@ -131,7 +134,8 @@ export class AgentService {
         buffer = lines.pop() || '' // Keep incomplete line in buffer
 
         for (const line of lines) {
-          if (!line.trim()) continue
+          if (!line.trim())
+            continue
           try {
             const event = JSON.parse(line) as CodexEvent
             this.log(sessionId, 'info', `Event: ${event.type}`, event)
@@ -206,7 +210,8 @@ export class AgentService {
    */
   private handleEvent(sessionId: string, event: CodexEvent): void {
     const session = this.sessions.get(sessionId)
-    if (!session) return
+    if (!session)
+      return
 
     // Save thread_id for resume
     if (event.type === 'thread.started' && event.thread_id) {
@@ -300,11 +305,21 @@ export class AgentService {
   private log(sessionId: string, level: LogLevel, message: string, data?: unknown): void {
     // Also log to main process console
     const prefix = `[Agent ${sessionId}]`
-    if (data) {
-      console[level](prefix, message, data)
+    if (level === 'warn') {
+      if (data) {
+        console.warn(prefix, message, data)
+      }
+      else {
+        console.warn(prefix, message)
+      }
     }
-    else {
-      console[level](prefix, message)
+    else if (level === 'error') {
+      if (data) {
+        console.error(prefix, message, data)
+      }
+      else {
+        console.error(prefix, message)
+      }
     }
 
     // Send to renderer

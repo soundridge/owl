@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
-import { useEffect } from 'react'
 import { Button } from '@renderer/components/ui/button'
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
 import { Skeleton } from '@renderer/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip'
-import { FolderGit2, PanelLeftClose, Plus } from 'lucide-react'
 import { ipcServices } from '@renderer/lib/ipcClient'
 import { useSessionStore, useUIStore, useWorkspaceStore } from '@renderer/store'
+import { FolderGit2, PanelLeftClose, Plus } from 'lucide-react'
+import { useEffect } from 'react'
 import { WorkspaceGroup } from './WorkspaceGroup'
 
 export function Sidebar() {

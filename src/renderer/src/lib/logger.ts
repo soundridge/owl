@@ -23,10 +23,20 @@ function formatMessage(level: LogLevel, message: string, options?: LogOptions): 
   const style = `color: ${LOG_COLORS[level]}; font-weight: bold;`
 
   if (options?.data !== undefined) {
-    console[level](prefix, style, message, options.data)
+    if (level === 'warn') {
+      console.warn(prefix, style, message, options.data)
+    }
+    else if (level === 'error') {
+      console.error(prefix, style, message, options.data)
+    }
   }
   else {
-    console[level](prefix, style, message)
+    if (level === 'warn') {
+      console.warn(prefix, style, message)
+    }
+    else if (level === 'error') {
+      console.error(prefix, style, message)
+    }
   }
 }
 

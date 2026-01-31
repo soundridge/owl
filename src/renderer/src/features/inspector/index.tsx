@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
-import { Layers } from 'lucide-react'
 import { useChangesStore, useSessionStore } from '@renderer/store'
+import { Layers } from 'lucide-react'
+import { useEffect } from 'react'
 import { BranchInfoCard } from './BranchInfoCard'
 import { ChangesTab } from './ChangesTab'
 

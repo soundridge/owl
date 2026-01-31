@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
-import { Loader2, MessageSquare, Send, Square } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
 import { ipcServices } from '@renderer/lib/ipcClient'
 import { agentLogger } from '@renderer/lib/logger'
+import { Loader2, MessageSquare, Send, Square } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Message {
   id: string
@@ -24,7 +24,8 @@ export function AgentChat({ sessionId, cwd }: AgentChatProps) {
 
   // Send message
   const handleSend = async () => {
-    if (!input.trim() || !sessionId || !cwd || status === 'running') return
+    if (!input.trim() || !sessionId || !cwd || status === 'running')
+      return
     if (!ipcServices) {
       agentLogger.error('IPC services not available')
       return
@@ -58,7 +59,8 @@ export function AgentChat({ sessionId, cwd }: AgentChatProps) {
   // Listen for IPC events
   useEffect(() => {
     const handleMessage = (_: unknown, sid: string, text: string) => {
-      if (sid !== sessionId) return
+      if (sid !== sessionId)
+        return
 
       agentLogger.info('Received message from agent')
       const assistantMessage: Message = {
@@ -71,20 +73,23 @@ export function AgentChat({ sessionId, cwd }: AgentChatProps) {
     }
 
     const handleStatus = (_: unknown, sid: string, newStatus: string) => {
-      if (sid !== sessionId) return
+      if (sid !== sessionId)
+        return
       agentLogger.debug(`Status changed: ${newStatus}`)
       setStatus(newStatus as 'idle' | 'running')
     }
 
     const handleError = (_: unknown, sid: string, error: string) => {
-      if (sid !== sessionId) return
+      if (sid !== sessionId)
+        return
       agentLogger.error(`Agent error: ${error}`)
       setStatus('idle')
     }
 
     // Listen for log messages from main process
     const handleLog = (_: unknown, sid: string, level: string, message: string, data?: unknown) => {
-      if (sid !== sessionId) return
+      if (sid !== sessionId)
+        return
       const logFn = agentLogger[level as keyof typeof agentLogger] || agentLogger.info
       if (typeof logFn === 'function') {
         logFn(message, data)

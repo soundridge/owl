@@ -1,4 +1,4 @@
-export { useWorkspaceStore } from './workspace'
-export { useSessionStore } from './session'
 export { useChangesStore } from './changes'
+export { useSessionStore } from './session'
 export { useUIStore } from './ui'
+export { useWorkspaceStore } from './workspace'
